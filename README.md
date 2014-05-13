@@ -13,8 +13,9 @@ installation process, giving you the following advantages:
 -   A method to cleanly share Homebrew admin rights among multiple
     users on a system.
 
-brewdo uses [Sudo](http://www.sudo.ws/), but not to run commands as
-`root`, but rather as a dedicated sandbox user account.
+brewdo uses [Sudo](http://www.sudo.ws/), but not to run commands
+as `root`; rather, to run Homebrew under a dedicated sandbox user
+account.
 
 Status
 ----
