@@ -1,0 +1,71 @@
+#!/bin/bash
+#
+# Copyright (c) 2014 Matt Behrens.
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+set -x # for debugging. we'll drop it later
+
+# save our called name
+me="$0"
+
+# command-line prefix for sudo sandboxing
+sudo='sudo -u _homebrew'
+
+case $1 in
+
+  brew)
+    shift
+    if [ x$1 = xhelp -o x$1 = xlist ]; then
+
+      # help and list can be run without sandboxing
+      brew "$@"
+
+    else
+
+      # escape from the current directory in case the sandbox user
+      # doesn't have rights here
+      cd /
+
+      # run the wrapped brew command as the sandbox user
+      ${sudo} "${me}" wrap "$@"
+
+    fi
+    ;;
+
+  wrap)
+    # create a temporary home (used by node, at least)
+    export HOME=`mktemp -d /tmp/brewdo.XXXXXX`
+    
+    # clean up on exit
+    trap "rm -rf ${HOME}" EXIT
+
+    # finally run the brew command
+    shift
+    HOMEBREW_LOGS=/var/log/homebrew brew "$@"
+    ;;
+
+  *)
+    echo usage: `basename $0` brew [OPTION [OPTION]...]
+    ;;
+
+esac
+
+# vim: tabstop=8 expandtab shiftwidth=2 softtabstop=2
