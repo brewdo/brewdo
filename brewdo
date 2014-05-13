@@ -45,12 +45,12 @@ case $1 in
       cd /
 
       # run the wrapped brew command as the sandbox user
-      ${sudo} "${me}" wrap "$@"
+      ${sudo} "${me}" _brew "$@"
 
     fi
     ;;
 
-  wrap)
+  _brew)
     # create a temporary home (used by node, at least)
     export HOME=`mktemp -d /tmp/brewdo.XXXXXX`
     
