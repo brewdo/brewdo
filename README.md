@@ -19,6 +19,9 @@ brewdo uses [Sudo](http://www.sudo.ws/), but not to run commands
 as `root`; rather, to run Homebrew under a dedicated sandbox user
 account.
 
+brewdo grew out of the experiment in my blog post, [Sandboxing
+Homebrew](https://www.zigg.com/2014/sandboxing-homebrew.html).
+
 Status
 ----
 
