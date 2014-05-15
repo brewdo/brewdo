@@ -27,7 +27,7 @@ set -x # for debugging. we'll drop it later
 # save our called name
 me="$0"
 
-# Homebrew owner username
+# username to sandbox with
 user=_homebrew
 
 # Homebrew home
@@ -37,7 +37,7 @@ brewhome=/usr/local
 sudo='sudo -u _homebrew'
 
 check_user () {
-  # check that the Homebrew owner exists
+  # check that the sandbox user exists
   if id -u ${user} >/dev/null 2>&1; then
     return 0
   else
@@ -66,88 +66,7 @@ check_home_owner () {
   fi
 }
 
-check_root () {
-  # ensure root
-  if [ `id -u` != 0 ]; then
-    echo root privileges are required; try sudo >&2
-    return 1
-  fi
-}
-
-add_user () {
-  # abandon with success if user already exists
-  if id -u ${user} >/dev/null 2>&1; then
-    echo user ${user} already exists >&2
-    return 0
-  fi
-
-  check_root || return 1
-
-  # inspired by <https://serverfault.com/a/532860/115137>
-  # search for an unused uid 500 or below
-  for uid in `seq 500 0`; do
-    if ! id -u ${uid} >/dev/null 2>&1; then
-
-      # check if a matching gid is present
-      if ! dscl /Local/Default -ls Groups gid | grep -q [^0-9]${uid}\$; then
-
-        # build out the account
-        cg="dscl /Local/Default -create Groups/${user}"
-        cu="dscl /Local/Default -create Users/${user}"
-        du="dscl /Local/Default -delete /Users/${user}"
-
-        ${cg}
-        ${cg} Password \*
-        ${cg} PrimaryGroupID ${uid}
-        ${cg} RealName "Homebrew Owner"
-
-        ${cu}
-        ${cu} NFSHomeDirectory /var/empty
-        ${cu} Password \*
-        ${cu} PrimaryGroupID ${uid}
-        ${cu} RealName "Homebrew Owner"
-        ${cu} UniqueID ${uid}
-        ${cu} UserShell /usr/bin/false
-
-        ${du} AuthenticationAuthority
-        ${du} PasswordPolicyOptions
-
-        # stop searching
-        break
-
-      fi
-
-    fi
-  done
-
-  # if we hit 0, we failed
-  if [ ${uid} = 0 ]; then
-    echo no free uid to create the ${user} user >&2
-    return 1
-  fi
-
-  return 0
-}
-
-del_user () {
-  # abandon with success if user doesn't exist
-  if ! id -u ${user} >/dev/null 2>&1; then
-    echo user ${user} does not exist >&2
-    return 0
-  fi
-
-  check_root || return 1
-
-  dscl /Local/Default -delete Users/${user}
-  dscl /Local/Default -delete Groups/${user}
-}
-
 case $1 in
-
-  adduser)
-    # only set up the Homebrew owner
-    add_user || exit 1
-    ;;
 
   brew)
     shift
@@ -158,11 +77,11 @@ case $1 in
 
     else
 
-      # escape from the current directory in case the Homebrew owner
-      # doesn't have read rights here
+      # escape from the current directory in case the sandbox user
+      # doesn't have rights here
       cd /
 
-      # run the wrapped brew command as the Homebrew owner
+      # run the wrapped brew command as the sandbox user
       ${sudo} "${me}" _brew "$@"
 
     fi
@@ -181,15 +100,9 @@ case $1 in
     ;;
 
   checkup)
-    # checks various requirements for brewdo operation
     check_user || exit 1
     check_home_exists || exit 1
     check_home_owner || exit 1
-    ;;
-
-  deluser)
-    # delete the Homebrew owner
-    del_user || exit 1
     ;;
 
   *)
@@ -197,7 +110,6 @@ case $1 in
     cat <<EOT >&2
 usage: ${command} brew [BREWARGS ...]
    or: ${command} checkup
-   or: ${command} adduser\|deluser
 EOT
     ;;
 
