@@ -21,13 +21,50 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+set -e # stop on error
 set -x # for debugging. we'll drop it later
 
 # save our called name
 me="$0"
 
+# username to sandbox with
+user=_homebrew
+
+# Homebrew home
+brewhome=/usr/local
+
 # command-line prefix for sudo sandboxing
 sudo='sudo -u _homebrew'
+
+check_user () {
+  # check that the sandbox user exists
+  if id -u ${user} >/dev/null 2>&1; then
+    return 0
+  else
+    echo user account ${user} does not exist >&2
+    return 1
+  fi
+}
+
+check_home_exists () {
+  # check the Homebrew home is present
+  if [ -d ${brewhome} ]; then
+    return 0
+  else
+    echo Homebrew home ${brewhome} does not exist >&2
+    return 1
+  fi
+}
+
+check_home_owner () {
+  # check the Homebrew home has proper ownership
+  if [ `find ${brewhome} -depth 0 -user ${user} | wc -l` = 1 ]; then
+    return 0
+  else
+    echo Homebrew home ${brewhome} has wrong owner >&2
+    return 1
+  fi
+}
 
 case $1 in
 
@@ -62,8 +99,18 @@ case $1 in
     HOMEBREW_LOGS=/var/log/homebrew brew "$@"
     ;;
 
+  checkup)
+    check_user || exit 1
+    check_home_exists || exit 1
+    check_home_owner || exit 1
+    ;;
+
   *)
-    echo usage: `basename $0` brew [OPTION [OPTION]...]
+    command=`basename $0`
+    cat <<EOT >&2
+usage: ${command} brew [BREWARGS ...]
+   or: ${command} checkup
+EOT
     ;;
 
 esac
