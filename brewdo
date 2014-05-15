@@ -197,7 +197,7 @@ case $1 in
     cat <<EOT >&2
 usage: ${command} brew [BREWARGS ...]
    or: ${command} checkup
-   or: ${command} adduser\|deluser
+   or: sudo ${command} adduser|deluser
 EOT
     ;;
 
