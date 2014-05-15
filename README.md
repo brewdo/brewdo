@@ -25,9 +25,10 @@ Homebrew](https://www.zigg.com/2014/sandboxing-homebrew.html).
 Status
 ----
 
-brewdo is still in early development and installation code is not yet
-present.  As of right now, it can be used to wrap the `brew` command,
-but requires unimplemented extra setup (see "What is needed" below).
+brewdo is still in early development and not all installation code
+is yet present.  As of right now, it can be used to wrap the `brew`
+command, but requires unimplemented extra setup (see "What is needed"
+below).
 
 How it works
 ----
@@ -46,7 +47,10 @@ What is needed
 Here's a short list of the prerequisites brewdo has for operation.
 Eventually, brewdo will have its own command for setting these up:
 
--   A sandbox user account (traditionally `_homebrew`)
+-   A sandbox user account (traditionally `_homebrew`); this can be
+    created with
+
+        sudo brewdo adduser
 
 -   A Sudo configuration in `/etc/sudoers` for the switch, e.g.
 
