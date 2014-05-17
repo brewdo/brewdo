@@ -28,57 +28,66 @@ set -x # for debugging. we'll drop it later
 me="$0"
 
 # Homebrew owner username
-user=_homebrew
+brewuser=_homebrew
 
-# Homebrew home
+# Homebrew home directory
 brewhome=/usr/local
 
+# Homebrew log directory
+brewlog=/var/log/homebrew
+
 # command-line prefix for sudo sandboxing
-sudo='sudo -u _homebrew'
+sudo="sudo -u ${brewuser}"
 
 check_user () {
   # check that the Homebrew owner exists
-  if id -u ${user} >/dev/null 2>&1; then
-    return 0
-  else
-    echo user account ${user} does not exist >&2
-    return 1
-  fi
+  id -u ${brewuser} >/dev/null 2>&1 || return 1
+  return 0
+}
+
+check_owner () {
+  # check the passed directory is owner by the Homebrew owner
+  [ `find $1 -depth 0 -user ${brewuser} | wc -l` = 1 ] || return 1
+  return 0
 }
 
 check_home_exists () {
   # check the Homebrew home is present
-  if [ -d ${brewhome} ]; then
-    return 0
-  else
-    echo Homebrew home ${brewhome} does not exist >&2
-    return 1
-  fi
+  [ -d ${brewhome} ] || return 1
+  return 0
 }
 
 check_home_owner () {
   # check the Homebrew home has proper ownership
-  if [ `find ${brewhome} -depth 0 -user ${user} | wc -l` = 1 ]; then
-    return 0
-  else
-    echo Homebrew home ${brewhome} has wrong owner >&2
-    return 1
-  fi
+  check_owner ${brewhome} || return 1
+  return 0
+}
+
+check_log_exists () {
+  # check the Homebrew log directory is present
+  [ -d ${brewlog} ] || return 1
+  return 0
+}
+
+check_log_owner () {
+  # check the Homebrew log directory has proper ownership
+  check_owner ${brewlog} || return 0
+  return 0
 }
 
 check_root () {
-  # ensure root
+  # ensure root or complain
   if [ `id -u` != 0 ]; then
-    echo root privileges are required; try sudo >&2
+    echo 'root privileges are required; try sudo' >&2
     return 1
   fi
 }
 
 add_user () {
-  # abandon with success if user already exists
-  if id -u ${user} >/dev/null 2>&1; then
-    echo user ${user} already exists >&2
-    return 0
+  # fail if user already exists
+  if ! check_user; then
+    echo Homebrew owner ${user} already exists >&2
+    return 1
   fi
 
   check_root || return 1
@@ -92,9 +101,9 @@ add_user () {
       if ! dscl /Local/Default -ls Groups gid | grep -q [^0-9]${uid}\$; then
 
         # build out the account
-        cg="dscl /Local/Default -create Groups/${user}"
-        cu="dscl /Local/Default -create Users/${user}"
-        du="dscl /Local/Default -delete /Users/${user}"
+        cg="dscl /Local/Default -create Groups/${brewuser}"
+        cu="dscl /Local/Default -create Users/${brewuser}"
+        du="dscl /Local/Default -delete /Users/${brewuser}"
 
         ${cg}
         ${cg} Password \*
@@ -122,7 +131,7 @@ add_user () {
 
   # if we hit 0, we failed
   if [ ${uid} = 0 ]; then
-    echo no free uid to create the ${user} user >&2
+    echo no free uid to create the ${brewuser} user >&2
     return 1
   fi
 
@@ -130,16 +139,36 @@ add_user () {
 }
 
 del_user () {
-  # abandon with success if user doesn't exist
-  if ! id -u ${user} >/dev/null 2>&1; then
-    echo user ${user} does not exist >&2
-    return 0
+  if check_user; then
+    echo Homebrew owner ${brewuser} does not exist >&2
+    return 1
   fi
 
-  check_root || return 1
+  dscl /Local/Default -delete Users/${brewuser}
+  dscl /Local/Default -delete Groups/${brewuser}
+}
 
-  dscl /Local/Default -delete Users/${user}
-  dscl /Local/Default -delete Groups/${user}
+create_log_dir () {
+  # create the Homebrew log directory
+  mkdir ${brewlog}
+  chmod 0755 ${brewlog}
+  chown ${brewuser} ${brewlog}
+}
+
+install_homebrew () {
+  # make home if nonexistent
+  check_home_exists || mkdir ${brewhome} || return 1
+
+  # set ownership on home and key directories
+  for dir in ${brewhome} ${brewhome}/bin ${brewhome}/share \
+      ${brewhome}/share/man ${brewhome}/share/man/man*; do
+    if [ -d ${dir} ]; then
+      chown ${brewuser} ${dir} || return 1
+    fi
+  done
+
+  # clone Homebrew into home
+  git clone https://github.com/Homebrew/homebrew.git ${brewhome} || return 1
 }
 
 case $1 in
@@ -171,20 +200,41 @@ case $1 in
   _brew)
     # create a temporary home (used by node, at least)
     export HOME=`mktemp -d /tmp/brewdo.XXXXXX`
-    
+
     # clean up on exit
     trap "rm -rf ${HOME}" EXIT
 
     # finally run the brew command
     shift
-    HOMEBREW_LOGS=/var/log/homebrew brew "$@"
+    HOMEBREW_LOGS=${brewlog} brew "$@"
     ;;
 
   checkup)
     # checks various requirements for brewdo operation
-    check_user || exit 1
-    check_home_exists || exit 1
-    check_home_owner || exit 1
+    err=0
+    if ! check_user; then
+      echo Homebrew owner ${brewuser} does not exist >&2
+      err=1
+    fi
+    if ! check_home_exists; then
+      echo Homebrew home ${brewhome} nonexistent >&2
+      err=1
+    else
+      if ! check_home_owner; then
+        echo Homebrew home ${brewhome} not owned by ${brewuser} >&2
+        err=1
+      fi
+    fi
+    if ! check_log_exists; then
+      echo Homebrew log directory ${brewlog} nonexistent >&2
+      err=1
+    else
+      if ! check_log_owner; then
+        echo Homebrew log directory ${brewlog} not owned by ${brewuser} >&2
+        err=1
+      fi
+    fi
+    exit ${err}
     ;;
 
   deluser)
@@ -192,11 +242,18 @@ case $1 in
     del_user || exit 1
     ;;
 
+  install)
+    add_user || exit 1
+    create_log_dir || exit 1
+    install_homebrew || exit 1
+    ;;
+
   *)
     command=`basename $0`
     cat <<EOT >&2
 usage: ${command} brew [BREWARGS ...]
    or: ${command} checkup
+   or: ${command} install
    or: sudo ${command} adduser|deluser
 EOT
     ;;
