@@ -85,7 +85,7 @@ check_root () {
 
 add_user () {
   # fail if user already exists
-  if ! check_user; then
+  if check_user; then
     echo Homebrew owner ${user} already exists >&2
     return 1
   fi
@@ -139,7 +139,7 @@ add_user () {
 }
 
 del_user () {
-  if check_user; then
+  if ! check_user; then
     echo Homebrew owner ${brewuser} does not exist >&2
     return 1
   fi
@@ -168,7 +168,8 @@ install_homebrew () {
   done
 
   # clone Homebrew into home
-  git clone https://github.com/Homebrew/homebrew.git ${brewhome} || return 1
+  ${sudo} git clone \
+    https://github.com/Homebrew/homebrew.git ${brewhome} || return 1
 }
 
 case $1 in
@@ -243,9 +244,35 @@ case $1 in
     ;;
 
   install)
-    add_user || exit 1
-    create_log_dir || exit 1
+    if ! check_user; then
+      add_user || exit 1
+    else
+      echo Homebrew owner ${brewuser} already exists, skipping >&2
+    fi
+    if ! check_log_exists; then
+      create_log_dir || exit 1
+    else
+      echo Homebrew log directory ${brewlog} already exists, skipping >&2
+    fi
     install_homebrew || exit 1
+
+    cat <<EOT >&2
+You're almost done!  Use visudo to add the following line to your sudo
+configuration, which will allow anyone in the admin group to use
+brewdo:
+
+    %admin  ALL=(_homebrew) SETENV: /usr/local/bin/brew
+
+To make brewdo simpler to you use, you can also add an alias to your
+.profile, e.g.
+
+    alias brew='brewdo brew'
+
+Thanks for trying brewdo, and please be sure to let me know what you
+think!
+                                        -- Matt Behrens <matt@zigg.com>
+
+EOT
     ;;
 
   *)
@@ -253,7 +280,7 @@ case $1 in
     cat <<EOT >&2
 usage: ${command} brew [BREWARGS ...]
    or: ${command} checkup
-   or: ${command} install
+   or: sudo ${command} install
    or: sudo ${command} adduser|deluser
 EOT
     ;;

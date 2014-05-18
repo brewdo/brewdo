@@ -25,10 +25,45 @@ Homebrew](https://www.zigg.com/2014/sandboxing-homebrew.html).
 Status
 ----
 
-brewdo is still in early development and not all installation code
-is yet present.  As of right now, it can be used to wrap the `brew`
-command, but requires unimplemented extra setup (see "What is needed"
-below).
+brewdo is best considered alpha right now; I've successfully run
+`brewdo install` in a VM and installed some software from the result.
+
+`brewdo install` expects a system with no current Homebrew install,
+though it should work with other software installed in `/usr/local`.
+(I haven't fully thought through what it might take to migrate an
+existing Homebrew install—see `MIGRATION.md` for current thinking.)
+
+Debugging information is currently turned on.
+
+Installation
+----
+
+0.  Make sure you have a current system backup, and time to revert to
+    it if things go horribly wrong!
+
+1.  Put `brewdo` wherever you like.  `bin` in your home directory
+    would not be a bad plan.
+
+2.  Run
+
+        sudo brewdo install
+
+    This will create the Homebrew owner, create the log directory
+    `/var/log/homebrew`, and clone Homebrew into `/usr/local`, owned
+    by the new owner account.
+
+3.  As instructed, add the following line to your Sudo configuration
+    via `sudo visudo`:
+
+        %admin  ALL=(_homebrew) SETENV: /usr/local/bin/brew
+
+4.  Finally, you can make brewdo easier to use by adding an alias to
+    your `.profile`:
+
+        alias brew='brewdo brew'
+
+    This lets you just say things like `brew install hello` which
+    should Just Work.
 
 How it works
 ----
@@ -41,26 +76,30 @@ brewdo also takes care of extra steps required by some formulae,
 such as creating (and cleaning up) a temporary home directory for
 node.
 
-What is needed
+What install does
 ----
 
 Here's a short list of the prerequisites brewdo has for operation.
-Eventually, brewdo will have its own command for setting these up:
+`brewdo install` takes care of all but the Sudo configuration:
 
--   A sandbox user account (traditionally `_homebrew`); this can be
-    created with
+-   A sandbox user account (traditionally `_homebrew`); this can
+    also be created with
 
         sudo brewdo adduser
-
--   A Sudo configuration in `/etc/sudoers` for the switch, e.g.
-
-        %admin  ALL=(_homebrew) SETENV: /usr/local/bin/brew
 
 -   A new log directory `/var/log/homebrew` that the sandbox account
     can write to
 
 -   The Homebrew root (traditionally `/usr/local`) set up with write
     rights granted to the sandbox account
+
+-   A Sudo configuration in `/etc/sudoers` for the switch, e.g.
+
+        %admin  ALL=(_homebrew) SETENV: /usr/local/bin/brew
+
+(I am opting not to do Sudo configuration automatically for now,
+because I get major heebeejeebies automating the modification of
+`/etc/sudoers`.)
 
 Optionally, you can simplify use of brewdo with the following alias:
 
