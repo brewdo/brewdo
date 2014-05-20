@@ -28,23 +28,23 @@ Status
 brewdo is best considered alpha right now; I've successfully run
 `brewdo install` in a VM and installed some software from the result.
 
-`brewdo install` expects a system with no current Homebrew install,
-though it should work with other software installed in `/usr/local`.
-(I haven't fully thought through what it might take to migrate an
-existing Homebrew install—see `MIGRATION.md` for current thinking.)
-
 Debugging information is currently turned on.
 
 Installation
 ----
 
-0.  Make sure you have a current system backup, and time to revert to
+`brewdo install` expects a system with no current Homebrew install,
+though it should work with other software installed in `/usr/local`.
+(I haven't fully thought through what it might take to migrate an
+existing Homebrew install—see `MIGRATION.md` for current thinking.)
+
+1.  Make sure you have a current system backup, and time to revert to
     it if things go horribly wrong!
 
-1.  Put `brewdo` wherever you like.  `bin` in your home directory
+2.  Put `brewdo` wherever you like.  `bin` in your home directory
     would not be a bad plan.
 
-2.  Run
+3.  Run
 
         sudo brewdo install
 
@@ -52,12 +52,12 @@ Installation
     `/var/log/homebrew`, and clone Homebrew into `/usr/local`, owned
     by the new owner account.
 
-3.  As instructed, add the following line to your Sudo configuration
+4.  As instructed, add the following line to your Sudo configuration
     via `sudo visudo`:
 
         %admin  ALL=(_homebrew) SETENV: /usr/local/bin/brew
 
-4.  Finally, you can make brewdo easier to use by adding an alias to
+5.  Finally, you can make brewdo easier to use by adding an alias to
     your `.profile`:
 
         alias brew='brewdo brew'
@@ -89,6 +89,9 @@ Here's a short list of the prerequisites brewdo has for operation.
 
 -   A new log directory `/var/log/homebrew` that the sandbox account
     can write to
+
+    (`/var/log/homebrew` was chosen specifically so it would show
+    up in the Console app, much like the traditional user logs.)
 
 -   The Homebrew root (traditionally `/usr/local`) set up with write
     rights granted to the sandbox account
