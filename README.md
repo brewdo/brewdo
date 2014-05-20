@@ -28,8 +28,6 @@ Status
 brewdo is best considered alpha right now; I've successfully run
 `brewdo install` in a VM and installed some software from the result.
 
-Debugging information is currently turned on.
-
 Installation
 ----
 
@@ -41,10 +39,15 @@ existing Homebrew install—see `MIGRATION.md` for current thinking.)
 1.  Make sure you have a current system backup, and time to revert to
     it if things go horribly wrong!
 
-2.  Put `brewdo` wherever you like.  `bin` in your home directory
-    would not be a bad plan.
+2.  Put `brewdo` wherever you like.  Symlinking it into `bin` in
+    your home directory while maintaining the script in your git
+    clone would not be a bad plan.
 
-3.  Run
+3.  Set the `BREWDO_DEBUG` environment variable to `1` to enable trace
+    messages.  If things go horribly wrong, these will be very useful.
+    Please don't submit an issue without them!
+
+4.  Run
 
         sudo brewdo install
 
@@ -52,7 +55,7 @@ existing Homebrew install—see `MIGRATION.md` for current thinking.)
     `/var/log/homebrew`, set up a Sudo config, and clone Homebrew
     into `/usr/local`, owned by the new owner account.
 
-4.  Finally, you can make brewdo easier to use by adding an alias to
+5.  Finally, you can make brewdo easier to use by adding an alias to
     your `.profile`:
 
         alias brew='brewdo brew'

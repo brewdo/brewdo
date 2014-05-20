@@ -22,7 +22,9 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 set -e # stop on error
-set -x # for debugging. we'll drop it later
+if [ x${BREWDO_DEBUG} != x ]; then
+  set -x # for debugging
+fi
 
 # save our called name
 me="$0"
