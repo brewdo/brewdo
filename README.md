@@ -49,15 +49,10 @@ existing Homebrew install—see `MIGRATION.md` for current thinking.)
         sudo brewdo install
 
     This will create the Homebrew owner, create the log directory
-    `/var/log/homebrew`, and clone Homebrew into `/usr/local`, owned
-    by the new owner account.
+    `/var/log/homebrew`, set up a Sudo config, and clone Homebrew
+    into `/usr/local`, owned by the new owner account.
 
-4.  As instructed, add the following line to your Sudo configuration
-    via `sudo visudo`:
-
-        %admin  ALL=(_homebrew) SETENV: /usr/local/bin/brew
-
-5.  Finally, you can make brewdo easier to use by adding an alias to
+4.  Finally, you can make brewdo easier to use by adding an alias to
     your `.profile`:
 
         alias brew='brewdo brew'
@@ -80,7 +75,7 @@ What install does
 ----
 
 Here's a short list of the prerequisites brewdo has for operation.
-`brewdo install` takes care of all but the Sudo configuration:
+`brewdo install` takes care of all of this:
 
 -   A sandbox user account (traditionally `_homebrew`); this can
     also be created with
@@ -96,15 +91,11 @@ Here's a short list of the prerequisites brewdo has for operation.
 -   The Homebrew root (traditionally `/usr/local`) set up with write
     rights granted to the sandbox account
 
--   A Sudo configuration in `/etc/sudoers` for the switch, e.g.
+-   A Sudo configuration for the switch, e.g.
 
         %admin  ALL=(_homebrew) SETENV: /usr/local/bin/brew
 
-(I am opting not to do Sudo configuration automatically for now,
-because I get major heebeejeebies automating the modification of
-`/etc/sudoers`.)
-
-Optionally, you can simplify use of brewdo with the following alias:
-
-    alias brew='brewdo brew'
+    (This is done by enabling `/etc/sudoers.d` if not already present
+    on your system, which I felt safer about doing rather than trying
+    to continually edit `/etc/sudoers`.)
 
