@@ -181,9 +181,17 @@ case $1 in
 
   brew)
     shift
-    if [ x$1 = xhelp -o x$1 = xlist ]; then
+    if [ \
+      x$1 = x--env -o \
+      x$1 = xconfig -o \
+      x$1 = xhelp -o \
+      x$1 = xhome -o \
+      x$1 = xinfo -o \
+      x$1 = xlist -o \
+      x$1 = xoptions -o \
+      x$1 = xsearch ]; then
 
-      # help and list can be run without sandboxing
+      # these commands can be run without sandboxing
       brew "$@"
 
     else
