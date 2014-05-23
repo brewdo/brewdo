@@ -86,11 +86,11 @@ def find_unused_uid
         Etc.getgrgid(uid)
       rescue ArgumentError
         # gid is also free (same logic) so we can use this
-        break uid
+        return uid
       end
     end
-    nil
   end
+  return nil
 end
 
 class OwnerExistsError < StandardError
