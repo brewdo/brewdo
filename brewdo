@@ -46,7 +46,7 @@ end
 # check that a directory is owned and writable by the Homebrew owner
 def is_owned_writable_by_owner?(directory)
   stat = File.stat(directory)
-  stat.uid == get_owner_uid and (stat.mode & 0700 == 0700)
+  stat.uid == get_owner_uid and (stat.mode & 0700) == 0700
 end
 
 # check that the Homebrew home is owned and writable by the Homebrew
@@ -237,6 +237,28 @@ def cmd_install
   )
 end
 
+# check brewdo setup
+def cmd_doctor
+  err = 0
+
+  unless is_owner_present?
+    puts 'Homebrew owner ' + HOMEBREW_USER + ' not present on system'
+    err = 1
+  end
+
+  unless is_home_owned_writable_by_owner?
+    puts HOMEBREW_HOME + ' not owned/writable by ' + HOMEBREW_USER
+    err = 1
+  end
+
+  unless is_log_owned_writable_by_owner?
+    puts HOMEBREW_LOGS + ' not owned/writable by ' + HOMEBREW_USER
+    err = 1
+  end
+
+  return err
+end
+
 cmd_args = ARGV[1, ARGV.length - 1]
 
 case ARGV[0]
@@ -253,6 +275,9 @@ when '_do'
 when 'install'
   cmd_install
 
+when 'doctor'
+  exit cmd_doctor
+
 when 'adduser'
   cmd_adduser
 
@@ -264,6 +289,7 @@ else
 usage: brewdo brew COMMAND [ARGS [ARGS]...]
        brewdo do COMMAND [ARGS [ARGS]...]
        sudo brewdo install
+       brewdo doctor
        sudo brewdo adduser|deluser
 EOT
 

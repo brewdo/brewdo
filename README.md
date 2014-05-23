@@ -63,6 +63,27 @@ existing Homebrew install—see `MIGRATION.md` for current thinking.)
     This lets you just say things like `brew install hello` which
     should Just Work.
 
+Commands
+----
+
+brewdo supports a number of commands:
+
+-   `brew`: runs Homebrew with the remaining arguments, in a sandbox
+    if needed (determined by checking a list).
+
+-   `do`: runs an arbitrary command in the brewdo sandbox.
+    `brewdo do sh` is very useful for troubleshooting.
+
+-   `install`: installs Homebrew sandboxed with brewdo.  See
+    [Installation](#installation). 
+
+-   `doctor`: like `brew doctor`, this checks up on brewdo's
+    installation.
+
+-   `adduser`/`deluser`: adds or removes the system user account
+    brewdo uses.  `install` does the `adduser` for you, so you only
+    need deal with these for troubleshooting or uninstallation.
+
 How it works
 ----
 
