@@ -94,11 +94,19 @@ Here's a short list of the prerequisites brewdo has for operation.
 -   The Homebrew root (traditionally `/usr/local`) set up with write
     rights granted to the sandbox account
 
--   A Sudo configuration for the switch, e.g.
+Sudo configuration
+----
 
-        %admin  ALL=(_homebrew) SETENV: /usr/local/bin/brew
+`brewdo install` formerly added a Sudo configuration, but in fact,
+that proved to be unnecessary as the default configuration (which
+allows members of the `admin` group to perform any actions as any
+user) worked with the subprocess scheme `brewdo` used.  If you wish
+to allow other users to use `brewdo` or have a different Sudo
+configuration, a line like this will do the job:
 
-    (This is done by enabling `/etc/sudoers.d` if not already present
-    on your system, which I felt safer about doing rather than trying
-    to continually edit `/etc/sudoers`.)
+    %admin  ALL=(_homebrew) /usr/local/bin/brew
+
+Consult
+[`sudoers(5)`](https://developer.apple.com/library/mac/documentation/Darwin/Reference/Manpages/man5/sudoers.5.html)
+for more information.
 
