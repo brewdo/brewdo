@@ -43,19 +43,19 @@ existing Homebrew install—see `MIGRATION.md` for current thinking.)
     your home directory while maintaining the script in your git
     clone would not be a bad plan.
 
-3.  Set the `BREWDO_DEBUG` environment variable to `1` to enable trace
-    messages.  If things go horribly wrong, these will be very useful.
-    Please don't submit an issue without them!
-
-4.  Run
+3.  Run
 
         sudo brewdo install
 
     This will create the Homebrew owner, create the log directory
-    `/var/log/homebrew`, set up a Sudo config, and clone Homebrew
-    into `/usr/local`, owned by the new owner account.
+    `/var/log/homebrew`, and clone Homebrew into `/usr/local`, owned
+    by the new owner account.
 
-5.  Finally, you can make brewdo easier to use by adding an alias to
+    (If this step complains that the owner account exists and you
+    are sure that's correct, you can run `sudo brewdo deluser` to
+    clear it out.)
+
+4.  Finally, you can make brewdo easier to use by adding an alias to
     your `.profile`:
 
         alias brew='brewdo brew'
@@ -74,7 +74,7 @@ brewdo also takes care of extra steps required by some formulae,
 such as creating (and cleaning up) a temporary home directory for
 node.
 
-What install does
+What brewdo install does
 ----
 
 Here's a short list of the prerequisites brewdo has for operation.
