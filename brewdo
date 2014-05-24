@@ -74,21 +74,31 @@ def require_root
   raise RootRequiredError.new('root required; try sudo') unless is_root?
 end
 
-# find an unused uid suitable for the Homebrew owner
+# check to see if a uid is unused
+def is_uid_unused?(uid)
+  begin
+    Etc.getpwuid(uid)
+  rescue ArgumentError
+    return true
+  end
+  false
+end
+
+# check to see if a gid is unused
+def is_gid_unused?(gid)
+  begin
+    Etc.getgrgid(gid)
+  rescue ArgumentError
+    return true
+  end
+  false
+end
+
+# find an unused uid and matching gid suitable for the Homebrew owner,
+# or nil if no suitable uid can be found
 def find_unused_uid
   500.downto(1) do |uid|
-    begin
-      Etc.getpwuid(uid)
-    rescue ArgumentError
-      # getpwuid raises ArgumentError when the uid in question is not
-      # found, so this uid is free; now check gid
-      begin
-        Etc.getgrgid(uid)
-      rescue ArgumentError
-        # gid is also free (same logic) so we can use this
-        return uid
-      end
-    end
+    return uid if is_uid_unused?(uid) and is_gid_unused?(uid)
   end
   return nil
 end
