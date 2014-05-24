@@ -11,5 +11,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # If you're using VirtualBox, you won't have guest additions, so you
   # must use rsync shared folder support.
-  config.vm.synced_folder ".", "/vagrant", type: "rsync"
+  config.vm.provider "virtualbox" do |vb|
+    config.vm.synced_folder ".", "/vagrant", type: "rsync"
+  end
 end
