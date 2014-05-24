@@ -25,16 +25,16 @@ Homebrew](https://www.zigg.com/2014/sandboxing-homebrew.html).
 Status
 ----
 
-brewdo is best considered alpha right now; I've successfully run
-`brewdo install` in a VM and installed some software from the result.
+brewdo works and I use it personally, but I do recommend you make
+sure your system is backed up before running `brewdo install`.
 
 Installation
 ----
 
 `brewdo install` expects a system with no current Homebrew install,
 though it should work with other software installed in `/usr/local`.
-(I haven't fully thought through what it might take to migrate an
-existing Homebrew install—see `MIGRATION.md` for current thinking.)
+(I have some thoughts on what it might take to existing Homebrew
+install—see `MIGRATION.md`.)
 
 1.  Make sure you have a current system backup, and time to revert to
     it if things go horribly wrong!
