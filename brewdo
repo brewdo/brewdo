@@ -167,13 +167,18 @@ def cmd_deluser
   dscl('-delete', user_path)
 end 
 
+# does this directory exist?
+def dir_exists?(dirname)
+  File.exists?(dirname) and File.directory?(dirname)
+end
+
 # create Homebrew home 
 def create_homebrew_home
   require_root
 
   # /usr/local generally exists, so it should not be a failure if it
   # does
-  Dir.mkdir(HOMEBREW_HOME) unless Dir.exists?(HOMEBREW_HOME)
+  Dir.mkdir(HOMEBREW_HOME) unless dir_exists?(HOMEBREW_HOME)
   uid = get_owner_uid
   File.chown(uid, nil, HOMEBREW_HOME)
 end
