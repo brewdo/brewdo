@@ -8,10 +8,4 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # To build your own OS X Vagrant box, see:
   # https://github.com/timsutton/osx-vm-templates
   config.vm.box = "osx109"
-
-  # If you're using VirtualBox, you won't have guest additions, so you
-  # must use rsync shared folder support.
-  config.vm.provider "virtualbox" do |vb|
-    config.vm.synced_folder ".", "/vagrant", type: "rsync"
-  end
 end
