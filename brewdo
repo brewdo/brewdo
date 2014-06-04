@@ -232,7 +232,7 @@ def cmd__do(*args)
   end
 
   ENV['HOME'] = temphome
-  ENV['HOMEBREW_LOG'] = HOMEBREW_LOGS
+  ENV['HOMEBREW_LOGS'] = HOMEBREW_LOGS
   system(*args)
   return $?.to_i >> 8
 end
