@@ -92,6 +92,12 @@ brewdo supports a number of commands:
     brewdo uses.  `install` does the `adduser` for you, so you only
     need deal with these for troubleshooting or uninstallation.
 
+-   `mkdirs`: sets up the log and home directories.  Like `adduser`,
+    this is for step-by-step install troubleshooting.
+
+-   `clone`: clones Homebrew into the home directory.  Same idea
+    as the other troubleshooting commands.
+
 How it works
 ----
 

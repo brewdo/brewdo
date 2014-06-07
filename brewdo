@@ -237,19 +237,28 @@ def cmd__do(*args)
   return $?.to_i >> 8
 end
 
-# set up Homebrew with brewdo
-def cmd_install
+# make home and log directories
+def cmd_mkdirs
   require_root
 
-  cmd_adduser
-  create_homebrew_home
   create_homebrew_log
+  create_homebrew_home
+end
 
+# clone Homebrew into /usr/local
+def cmd_clone
   raise GitCloneError.new('Homebrew clone failed') unless system(
     ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER,
     '/usr/bin/git', 'clone', 'https://github.com/Homebrew/homebrew.git',
     HOMEBREW_HOME
   )
+end
+
+# set up Homebrew with brewdo
+def cmd_install
+  cmd_adduser
+  cmd_mkdirs
+  cmd_clone
 end
 
 # check brewdo setup
@@ -299,6 +308,12 @@ when 'adduser'
 when 'deluser'
   cmd_deluser
 
+when 'mkdirs'
+  cmd_mkdirs
+
+when 'clone'
+  cmd_clone
+
 else
   puts <<-EOT
 usage: brewdo brew COMMAND [ARGS [ARGS]...]
@@ -306,6 +321,8 @@ usage: brewdo brew COMMAND [ARGS [ARGS]...]
        sudo brewdo install
        brewdo doctor
        sudo brewdo adduser|deluser
+       sudo brewdo mkdirs
+       brewdo clone
 EOT
 
 end
