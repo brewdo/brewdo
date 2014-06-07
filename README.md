@@ -30,6 +30,8 @@ sure your system is backed up before running `brewdo install`.
 
 brewdo has been tested on:
 
+-   OS X 10.10 Yosemite Developer Preview
+
 -   OS X 10.9 Mavericks (primary development platform)
 
 -   OS X 10.8 Mountain Lion
