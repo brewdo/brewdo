@@ -202,8 +202,20 @@ def cmd_brew(*args)
 
   # some Homebrew commands can be called directly
   if [
-    '--env', 'config', 'help', 'home', 'info', 'list', 'options', 'search'
-  ].member?(args[0])
+    '--cellar',
+    '--env',
+    '--help',
+    '--prefix',
+    '--repository',
+    'config',
+    'help',
+    'home',
+    'info',
+    'list',
+    'options',
+    'outdated',
+    'search',
+  ].member?(args[0]) or (args[0] == 'doctor' and args[1] == '--list-checks')
     system([brew_bin, 'brew'], *args)
     return $?.to_i >> 8
   else
