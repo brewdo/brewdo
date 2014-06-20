@@ -3,7 +3,7 @@ Thoughts on migration to brewdo
 
 Obviously, a lot of people already use Homebrew.  brewdo currently
 supports a clean installation.  But it would be nice to be able to
-sandbox an existing Homebrew installation.
+migrate an existing Homebrew installation to brewdo.
 
 This is tricky because some software's expectations are changed a
 little.  (This was even part of the original motivation for brewdo!)
@@ -13,8 +13,7 @@ brewdo doesn't allow that, by design.  So there could concievably
 be things in `/usr/local` that Homebrew never installed; should
 those also be migrated?
 
-I have a couple thoughts for how to implement migrations, and am
-undecided as to which.  Feedback is welcome.
+Here are some ideas.
 
 Dump and load
 ----
@@ -34,6 +33,17 @@ This is definitely going to be the cleanest option, but it does
 require time and possibly manual lifting of other inhabitants of
 `/usr/local`.
 
+It also [doesn't carry forward package options]
+(https://github.com/zigg/brewdo/issues/1#issuecomment-46171085) as
+implemented above, but we could concievably write code that peeks
+in all the install receipts to build a script that does reapply
+build options.  Even with *that*, though, it's plausible that
+someone has old brewed installs that are no longer available or
+available in an incompatible form.
+
+While I personally like this method, it seems like it would be
+the least safe one.
+
 Ownership change
 ----
 
@@ -47,4 +57,9 @@ entirely clean, migration by simply changing ownership on everything
 in `/usr/local` owned by the user.  Since `/usr/local` isn't generally
 writable by user accounts except via Homebrew, it seems unlikely
 this will mangle ownership on unintended things.
+
+This is both easily implementable and easily reversible.  I think it
+has potential as brewdo's default migration method, even if it results
+in a potentially unclean installation—everything should still *work*,
+and that's the most important bit.
 
