@@ -200,6 +200,10 @@ end
 def cmd_brew(*args)
   brew_bin = HOMEBREW_HOME + '/bin/brew'
 
+  if args.length == 0
+    args = ['help']
+  end
+
   # some Homebrew commands can be called directly
   if [
     '--cellar',
