@@ -25,6 +25,7 @@ HOMEBREW_USER = '_homebrew'
 HOMEBREW_HOME = '/usr/local'
 HOMEBREW_LOGS = '/var/log/homebrew'
 
+require 'find'
 require 'fileutils'
 require 'etc'
 
@@ -299,6 +300,31 @@ def cmd_doctor
   return err
 end
 
+# switch ownership/groups recursively on HOMEBREW_HOME
+def switch_owners(old_user, old_group, new_user, new_group)
+  old_uid = Etc.getpwnam(old_user).uid
+  old_gid = Etc.getgrnam(old_group).gid
+  new_uid = Etc.getpwnam(new_user).uid
+  new_gid = Etc.getgrnam(new_group).gid
+
+  Find.find('/usr/local') do |pathname|
+    stat = File.stat(pathname)
+    if stat.uid == old_uid and stat.gid == old_gid
+      File.chown(new_uid, new_gid, pathname)
+    end
+  end
+end
+
+# migrate from an existing user to HOMEBREW_USER
+def cmd_migrate(username)
+  switch_owners(username, 'admin', HOMEBREW_USER, 'wheel')
+end
+
+# revert from HOMEBREW_USER to a "normal" user
+def cmd_unmigrate(username)
+  switch_owners(HOMEBREW_USER, 'wheel', username, 'admin')
+end
+
 cmd_args = ARGV[1, ARGV.length - 1]
 
 case ARGV[0]
@@ -330,6 +356,12 @@ when 'mkdirs'
 when 'clone'
   cmd_clone
 
+when 'migrate'
+  cmd_migrate(*cmd_args)
+
+when 'unmigrate'
+  cmd_unmigrate(*cmd_args)
+
 else
   puts <<-EOT
 usage: brewdo brew COMMAND [ARGS [ARGS]...]
@@ -339,6 +371,7 @@ usage: brewdo brew COMMAND [ARGS [ARGS]...]
        sudo brewdo adduser|deluser
        sudo brewdo mkdirs
        brewdo clone
+       sudo brewdo migrate|unmigrate USERNAME
 EOT
 
 end

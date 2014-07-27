@@ -7,7 +7,7 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # To build your own OS X Vagrant box, see:
   # https://github.com/timsutton/osx-vm-templates
-  config.vm.box = "osx-10.9"
+  config.vm.box = "osx-10.8.5"
 
   # OS X on VirtualBox doesn't currently have guest additions, so use
   # rsync instead.

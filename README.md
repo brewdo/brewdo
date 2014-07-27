@@ -42,8 +42,7 @@ Installation
 
 `brewdo install` expects a system with no current Homebrew install,
 though it should work with other software installed in `/usr/local`.
-(I have some thoughts on what it might take to existing Homebrew
-install—see `MIGRATION.md`.)
+If you're switching from an existing Homebrew install, see below.
 
 1.  Make sure you have a current system backup, and time to revert to
     it if things go horribly wrong!
@@ -72,6 +71,36 @@ install—see `MIGRATION.md`.)
     This lets you just say things like `brew install hello` which
     should Just Work.
 
+Switching
+----
+
+If you have an existing Homebrew install, you can use the switch
+support to move all your existing installs to brewdo ownership:
+
+1.  INSERT PRELIMINARIES HERE
+
+2.  Run
+
+        sudo brewdo adduser
+
+    This will create the Homebrew owner.
+
+3.  Run
+
+        sudo brewdo mkdirs
+
+    This will set up any necessary directories.
+
+4.  Run
+
+        sudo brewdo migrate matt
+
+Remaining steps include:
+
+-   /Library/Caches/Homebrew
+
+-   Other things?  Testing needed.
+
 Commands
 ----
 
@@ -98,6 +127,11 @@ brewdo supports a number of commands:
 
 -   `clone`: clones Homebrew into the home directory.  Same idea
     as the other troubleshooting commands.
+
+-   `migrate`/`unmigrate`: changes ownership on existing files in
+    the Homebrew home to switch them from an existing user-owned
+    installation to a brewdo installation.  Requires the username to
+    switch from/to.
 
 How it works
 ----
