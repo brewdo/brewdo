@@ -30,12 +30,22 @@ sure your system is backed up before running `brewdo install`.
 
 brewdo has been tested on:
 
--   OS X 10.10 Yosemite Developer Preview 2 (but note that Homebrew
-    does not yet support this platform!)
-
 -   OS X 10.9 Mavericks (primary development platform)
 
 -   OS X 10.8 Mountain Lion
+
+Preliminaries
+----
+
+Whether you're installing brewdo new or switching from an existing
+Homebrew install, make sure you follow these steps:
+
+1.  Make sure you have a current system backup, and time to revert to
+    it in case things go horribly wrong!
+
+2.  Put `brewdo` wherever you like.  Symlinking it into `bin` in
+    your home directory while maintaining the script in your git
+    clone would not be a bad plan.
 
 Installation
 ----
@@ -44,32 +54,17 @@ Installation
 though it should work with other software installed in `/usr/local`.
 If you're switching from an existing Homebrew install, see below.
 
-1.  Make sure you have a current system backup, and time to revert to
-    it if things go horribly wrong!
+Run
 
-2.  Put `brewdo` wherever you like.  Symlinking it into `bin` in
-    your home directory while maintaining the script in your git
-    clone would not be a bad plan.
+    sudo brewdo install
 
-3.  Run
+This will create the Homebrew owner, create the log directory
+`/var/log/homebrew`, and clone Homebrew into `/usr/local`, owned
+by the new owner account.
 
-        sudo brewdo install
-
-    This will create the Homebrew owner, create the log directory
-    `/var/log/homebrew`, and clone Homebrew into `/usr/local`, owned
-    by the new owner account.
-
-    (If this step complains that the owner account exists and you
-    are sure that's correct, you can run `sudo brewdo deluser` to
-    clear it out.)
-
-4.  Finally, you can make brewdo easier to use by adding an alias to
-    your `.profile`:
-
-        alias brew='brewdo brew'
-
-    This lets you just say things like `brew install hello` which
-    should Just Work.
+(If this step complains that the owner account exists and you are
+sure that's correct, you can run `sudo brewdo deluser` to clear it
+out.)
 
 Switching
 ----
@@ -77,22 +72,23 @@ Switching
 If you have an existing Homebrew install, you can use the switch
 support to move all your existing installs to brewdo ownership:
 
-1.  INSERT PRELIMINARIES HERE
+    sudo brewdo switch
 
-2.  Run
+This will create the Homebrew owner, create the log directory
+`/var/log/homebrew`, and recursively switch ownership in both
+`/usr/local` and the Homebrew cache directory (`/Library/Caches/Homebrew`)
+so that brewdo can be used with your existing Homebrew installation.
 
-        sudo brewdo adduser
-        sudo brewdo mklogdir
+Final steps
+----
 
-    This will create the Homebrew owner and log directory.
+You can make brewdo easier to use by adding an alias to your
+`.profile`:
 
-3.  Run
+    alias brew='brewdo brew'
 
-        sudo brewdo migrate
-
-    This will change ownership on the Homebrew home and cache. 
-
-4.  INSERT ALIAS HERE
+This lets you just say things like `brew install hello` which should
+Just Work.
 
 Commands
 ----

@@ -286,6 +286,13 @@ def cmd_install
   cmd_clone
 end
 
+# switch from an existing Homebrew installation to brewdo
+def cmd_switch
+  cmd_adduser
+  cmd_mklogdir
+  cmd_migrate
+end
+
 # check brewdo setup
 def cmd_doctor
   err = 0
@@ -363,6 +370,9 @@ when '_do'
 when 'install'
   cmd_install
 
+when 'switch'
+  cmd_switch
+
 when 'doctor'
   exit cmd_doctor
 
@@ -392,6 +402,7 @@ else
 usage: brewdo brew COMMAND [ARGS [ARGS]...]
        brewdo do COMMAND [ARGS [ARGS]...]
        sudo brewdo install
+       sudo brewdo switch
        brewdo doctor
        sudo brewdo adduser|deluser
        sudo brewdo mkdirs
