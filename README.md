@@ -82,24 +82,17 @@ support to move all your existing installs to brewdo ownership:
 2.  Run
 
         sudo brewdo adduser
+        sudo brewdo mklogdir
 
-    This will create the Homebrew owner.
+    This will create the Homebrew owner and log directory.
 
 3.  Run
 
-        sudo brewdo mkdirs
+        sudo brewdo migrate
 
-    This will set up any necessary directories.
+    This will change ownership on the Homebrew home and cache. 
 
-4.  Run
-
-        sudo brewdo migrate matt
-
-Remaining steps include:
-
--   /Library/Caches/Homebrew
-
--   Other things?  Testing needed.
+4.  INSERT ALIAS HERE
 
 Commands
 ----
@@ -125,13 +118,17 @@ brewdo supports a number of commands:
 -   `mkdirs`: sets up the log and home directories.  Like `adduser`,
     this is for step-by-step install troubleshooting.
 
+-   `mklogdir`: like `mkdirs`, but sets up the log directory only.
+
 -   `clone`: clones Homebrew into the home directory.  Same idea
     as the other troubleshooting commands.
 
--   `migrate`/`unmigrate`: changes ownership on existing files in
-    the Homebrew home to switch them from an existing user-owned
-    installation to a brewdo installation.  Requires the username to
-    switch from/to.
+-   `migrate`: changes ownership on existing files in the Homebrew
+    home and cache to switch them from an existing user-owned
+    installation to a brewdo installation.
+
+-   `unmigrate`: changes ownership back to the supplied username, to
+    go back to the old Homebrew setup.
 
 How it works
 ----
