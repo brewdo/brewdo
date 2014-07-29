@@ -1,0 +1,142 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "BREWDO" "1" "July 2014" "" ""
+.
+.SH "NAME"
+\fBbrewdo\fR \- sandboxing wrapper for brew(1)
+.
+.SH "SYNOPSIS"
+\fBbrewdo\fR \fIcommand\fR [\fIarguments\fR\.\.\.]
+.
+.SH "DESCRIPTION"
+brewdo(1) is a wrapper for brew(1) that sandboxes the installation process, giving you the following advantages:
+.
+.IP "\(bu" 4
+Your user account loses write rights to \fB/usr/local\fR, making it much harder to accidentally break your Homebrew\-installed software (or other \fB/usr/local\fR software)
+.
+.IP "\(bu" 4
+Software installations lose write rights to your home directory and other places outside \fB/usr/local\fR, blocking those installations from modifying things they\'re not supposed to
+.
+.IP "\(bu" 4
+You can cleanly share Homebrew admin rights among multiple users of the same system
+.
+.IP "" 0
+.
+.P
+brewdo uses sudo(1), but not to run commands as \fBroot\fR; rather, to run Homebrew under a dedicated sandbox user account\.
+.
+.SH "QUICK START"
+Make a backup first!
+.
+.P
+If you don\'t have an existing Homebrew installation, \fBinstall\fR can make one for you:
+.
+.IP "" 4
+.
+.nf
+
+sudo brewdo install
+.
+.fi
+.
+.IP "" 0
+.
+.P
+If you do have an existing Homebrew installation, \fBswitch\fR can migrate it out of your account\'s ownership and into the brewdo user\'s:
+.
+.IP "" 4
+.
+.nf
+
+sudo brewdo switch
+.
+.fi
+.
+.IP "" 0
+.
+.P
+After either step, you can make brewdo simpler to use by adding an alias definition to your \fB\.profile\fR, which makes familiar brew(1) commands work transparently with brewdo:
+.
+.IP "" 4
+.
+.nf
+
+alias brew=\'brewdo brew\'
+.
+.fi
+.
+.IP "" 0
+.
+.SH "GLOSSARY"
+.
+.TP
+Homebrew user
+The user account that owns the contents of the Homebrew home, which brewdo(1) switches to for write operations\. Currently \fB_homebrew\fR\.
+.
+.TP
+Homebrew home
+The directory that stores all Homebrew\-installed software and Homebrew itself, including its git(1) repository\. In a brewdo(1) installation, contents are owned by the Homebrew user; without brewdo(1), contents are owned by a regular user\. Currently \fB/usr/local\fR\.
+.
+.SH "COMMANDS"
+brewdo(1) supports the following primary commands:
+.
+.TP
+\fBbrew\fR \fIcommand\fR [\fIarguments\fR]
+Run brew(1) with the supplied arguments, using sudo(1) to switch to the Homebrew user unless \fIcommand\fR is one of a whitelist of commands that can be run without switching contexts\.
+.
+.TP
+\fBdo\fR \fIcommand\fR [\fIarguments\fR\.\.\.]
+Use sudo(1) to switch to the Homebrew user and run the supplied command\. Intended for maintenance of the Homebrew home\.
+.
+.TP
+\fBinstall\fR
+Create the Homebrew user and log directory, and clone Homebrew into \fB/usr/local\fR\. Must be run as \fBroot\fR\.
+.
+.TP
+\fBswitch\fR
+Create the Homebrew user and log directory, and intelligently change ownership on files in the Homebrew home from the current owner (presumably your user account; brewdo checks who owns the \fB\.git\fR directory to determine this) to the Homebrew user\. \fBswitch\fR will not change ownership on files that do not belong to the user that owns the \fB\.git\fR directory\. Must be run as \fBroot\fR\.
+.
+.P
+brewdo(1) also supports the following secondary commands, which are intended for maintenance, step\-by\-step installation, and uninstallation:
+.
+.TP
+\fBdoctor\fR
+Perform some checks on the Homebrew setup and report issues\.
+.
+.TP
+\fBadduser\fR
+Create the Homebrew user\. Must be run as \fBroot\fR\.
+.
+.TP
+\fBdeluser\fR
+Remove the Homebrew user\. Must be run as \fBroot\fR\.
+.
+.TP
+\fBmkdirs\fR
+Create the Homebrew log directory and the Homebrew home\. Must be run as \fBroot\fR\.
+.
+.TP
+\fBmklogdir\fR
+Create the Homebrew log directory\. Must be run as \fBroot\fR\.
+.
+.TP
+\fBclone\fR
+Clones Homebrew into the Homebrew home\. Must be run as the Homebrew user\.
+.
+.TP
+\fBmigrate\fR
+Intelligently change ownership on files in the Homebrew home from the current owner, as is done as part of \fBswitch\fR\. Must be run as \fBroot\fR\.
+.
+.TP
+\fBunmigrate\fR \fIusername\fR
+Intelligently change ownership on files in the Homebrew home from the Homebrew user to the supplied username\. Must be run as \fBroot\fR\.
+.
+.SH "AUTHOR"
+Matt Behrens \fImatt@zigg\.com\fR
+.
+.SH "SEE ALSO"
+brew(1), git(1), sudo(8)
+.
+.P
+Sandboxing Homebrew \fIhttps://www\.zigg\.com/2014/sandboxing\-homebrew\.html\fR, brewdo(1)\'s predecessor
