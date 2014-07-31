@@ -325,33 +325,47 @@ class AlreadySwitchedError < StandardError
 end
 
 # switch ownership/groups recursively on HOMEBREW_HOME, HOMEBREW_CACHE
-def switch_owners(new_user, new_group)
-  old_uid, old_gid = file_owner(HOMEBREW_HOME + '/.git') 
+def switch_owners(new_user, new_home_group, new_cache_group)
+  home_uid, home_gid = file_owner(HOMEBREW_HOME + '/.git') 
+  cache_uid, cache_gid = file_owner(HOMEBREW_CACHE + '/Formula')
   new_uid = Etc.getpwnam(new_user).uid
-  new_gid = Etc.getgrnam(new_group).gid
+  new_home_gid = Etc.getgrnam(new_home_group).gid
+  new_cache_gid = Etc.getgrnam(new_cache_group).gid
 
-  raise AlreadySwitchedError.new('already switched') if old_uid == new_uid
+  if home_uid == new_uid
+    raise AlreadySwitchedError.new('already switched')
+  end
 
-  Find.find(HOMEBREW_HOME, HOMEBREW_CACHE) do |pathname|
+  Find.find(HOMEBREW_HOME) do |pathname|
+    uid, gid = file_owner(pathname)
+    if pathname == HOMEBREW_HOME or (uid == home_uid and gid == home_gid)
+      File.chown(new_uid, new_home_gid, pathname)
+    end
+  end
+
+  Find.find(HOMEBREW_CACHE) do |pathname|
     next if pathname == HOMEBREW_CACHE # skip top-level directory
     uid, gid = file_owner(pathname)
-    if pathname == HOMEBREW_HOME or (uid == old_uid and gid == old_gid)
-      File.chown(new_uid, new_gid, pathname)
+    if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
+      File.chown(new_uid, new_cache_gid, pathname)
     end
   end
 end
 
 # migrate from an existing user to HOMEBREW_USER
 def cmd_migrate
-  switch_owners(HOMEBREW_USER, 'wheel')
+  switch_owners(HOMEBREW_USER, 'wheel', 'admin')
   File.chmod(0755, HOMEBREW_HOME)
+  File.chmod(0755, HOMEBREW_CACHE)
 end
 
 # revert from HOMEBREW_USER to a "normal" use
 def cmd_unmigrate(username)
-  switch_owners(username, 'admin')
+  switch_owners(username, 'admin', 'admin')
   File.chown(0, nil, HOMEBREW_HOME)
   File.chmod(0775, HOMEBREW_HOME)
+  File.chown(0, nil, HOMEBREW_CACHE)
+  File.chmod(0775, HOMEBREW_CACHE)
 end
 
 cmd_args = ARGV[1, ARGV.length - 1]
