@@ -68,16 +68,6 @@ alias brew=\'brewdo brew\'
 .
 .IP "" 0
 .
-.SH "GLOSSARY"
-.
-.TP
-Homebrew user
-The user account that owns the contents of the Homebrew home, which brewdo(1) switches to for write operations\. Currently \fB_homebrew\fR\.
-.
-.TP
-Homebrew home
-The directory that stores all Homebrew\-installed software and Homebrew itself, including its git(1) repository\. In a brewdo(1) installation, contents are owned by the Homebrew user; without brewdo(1), contents are owned by a regular user\. Currently \fB/usr/local\fR\.
-.
 .SH "COMMANDS"
 brewdo(1) supports the following primary commands:
 .
@@ -91,11 +81,11 @@ Use sudo(1) to switch to the Homebrew user and run the supplied command\. Intend
 .
 .TP
 \fBinstall\fR
-Create the Homebrew user and log directory, and clone Homebrew into \fB/usr/local\fR\. Must be run as \fBroot\fR\.
+Create the Homebrew user, log directory, and cache; then clone Homebrew into \fB/usr/local\fR\. Must be run as \fBroot\fR\.
 .
 .TP
 \fBswitch\fR
-Create the Homebrew user and log directory, and intelligently change ownership on files in the Homebrew home from the current owner (presumably your user account; brewdo checks who owns the \fB\.git\fR directory to determine this) to the Homebrew user\. \fBswitch\fR will not change ownership on files that do not belong to the user that owns the \fB\.git\fR directory\. Must be run as \fBroot\fR\.
+Create the Homebrew user and log directory, and intelligently change ownership on files in the Homebrew home and Homebrew cachefrom the current owner (presumably your user account; brewdo checks who owns the \fB\.git\fR directory and cache contents to determine this) to the Homebrew user\. \fBswitch\fR will not change ownership on files that do not belong to the user that owns the \fB\.git\fR directory\. Must be run as \fBroot\fR\.
 .
 .P
 brewdo(1) also supports the following secondary commands, which are intended for maintenance, step\-by\-step installation, and uninstallation:
@@ -106,23 +96,23 @@ Perform some checks on the Homebrew setup and report issues\.
 .
 .TP
 \fBadduser\fR
-Create the Homebrew user\. Must be run as \fBroot\fR\.
+Create the Homebrew user\. Normally part of \fBinstall\fR and \fBswitch\fR\. Must be run as \fBroot\fR\.
 .
 .TP
 \fBdeluser\fR
-Remove the Homebrew user\. Must be run as \fBroot\fR\.
+Remove the Homebrew user\. This is your final step for cleaning up after you\'ve decided you hate brewdo\. Must be run as \fBroot\fR\.
 .
 .TP
 \fBmkdirs\fR
-Create the Homebrew log directory and the Homebrew home\. Must be run as \fBroot\fR\.
+Create the Homebrew log directory, Homebrew home, and the Homebrew cache\. Normally part of \fBinstall\fR\. Must be run as \fBroot\fR\.
 .
 .TP
 \fBmklogdir\fR
-Create the Homebrew log directory\. Must be run as \fBroot\fR\.
+Create the Homebrew log directory\. Normally part of \fBswitch\fR\. Must be run as \fBroot\fR\.
 .
 .TP
 \fBclone\fR
-Clones Homebrew into the Homebrew home\. Must be run as the Homebrew user\.
+Clones Homebrew into the Homebrew home\. Normally part of \fBinstall\fR\. Must be run as the Homebrew user\.
 .
 .TP
 \fBmigrate\fR
@@ -130,7 +120,21 @@ Intelligently change ownership on files in the Homebrew home from the current ow
 .
 .TP
 \fBunmigrate\fR \fIusername\fR
-Intelligently change ownership on files in the Homebrew home from the Homebrew user to the supplied username\. Must be run as \fBroot\fR\.
+Intelligently change ownership on files in the Homebrew home from the Homebrew user to the supplied username, and make other adjustments\. This would be your first step to returning to a stock Homebrew setup from a brewdo setup\.\. Must be run as \fBroot\fR\.
+.
+.SH "GLOSSARY"
+.
+.TP
+Homebrew user
+The user account that owns the contents of the Homebrew home, which brewdo(1) switches to for write operations\. Currently \fB_homebrew\fR\.
+.
+.TP
+Homebrew home
+The directory that stores all Homebrew\-installed software and Homebrew itself, including its git(1) repository\. In a brewdo(1) installation, contents are owned by the Homebrew user; without brewdo(1), contents are owned by a regular user\. Currently \fB/usr/local\fR\.
+.
+.TP
+Homebrew cache
+The directory that stores downloaded files and other temporary items for Homebrew operation, \fB/Library/Caches/Homebrew\fR\.
 .
 .SH "AUTHOR"
 Matt Behrens \fImatt@zigg\.com\fR
