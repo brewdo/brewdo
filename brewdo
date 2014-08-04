@@ -24,7 +24,9 @@
 HOMEBREW_USER = '_homebrew'
 HOMEBREW_HOME = '/usr/local'
 HOMEBREW_LOGS = '/var/log/homebrew'
+HOMEBREW_CACHE = '/Library/Caches/Homebrew'
 
+require 'find'
 require 'fileutils'
 require 'etc'
 
@@ -261,7 +263,14 @@ def cmd_mkdirs
   create_homebrew_home
 end
 
-# clone Homebrew into /usr/local
+# make log directory only
+def cmd_mklogdir
+  require_root
+
+  create_homebrew_log
+end
+
+# clone Homebrew into Homebrew home
 def cmd_clone
   raise GitCloneError.new('Homebrew clone failed') unless system(
     ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER,
@@ -275,6 +284,13 @@ def cmd_install
   cmd_adduser
   cmd_mkdirs
   cmd_clone
+end
+
+# switch from an existing Homebrew installation to brewdo
+def cmd_switch
+  cmd_adduser
+  cmd_mklogdir
+  cmd_migrate
 end
 
 # check brewdo setup
@@ -299,6 +315,58 @@ def cmd_doctor
   return err
 end
 
+# determine ownership of a given file
+def file_owner(pathname)
+  stat = File.stat(pathname)
+  return stat.uid, stat.gid
+end
+
+class AlreadySwitchedError < StandardError
+end
+
+# switch ownership/groups recursively on HOMEBREW_HOME, HOMEBREW_CACHE
+def switch_owners(new_user, new_home_group, new_cache_group)
+  home_uid, home_gid = file_owner(HOMEBREW_HOME + '/.git') 
+  cache_uid, cache_gid = file_owner(HOMEBREW_CACHE + '/Formula')
+  new_uid = Etc.getpwnam(new_user).uid
+  new_home_gid = Etc.getgrnam(new_home_group).gid
+  new_cache_gid = Etc.getgrnam(new_cache_group).gid
+
+  if home_uid == new_uid
+    raise AlreadySwitchedError.new('already switched')
+  end
+
+  Find.find(HOMEBREW_HOME) do |pathname|
+    uid, gid = file_owner(pathname)
+    if pathname == HOMEBREW_HOME or (uid == home_uid and gid == home_gid)
+      File.chown(new_uid, new_home_gid, pathname)
+    end
+  end
+
+  Find.find(HOMEBREW_CACHE) do |pathname|
+    uid, gid = file_owner(pathname)
+    if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
+      File.chown(new_uid, new_cache_gid, pathname)
+    end
+  end
+end
+
+# migrate from an existing user to HOMEBREW_USER
+def cmd_migrate
+  switch_owners(HOMEBREW_USER, 'wheel', 'admin')
+  File.chmod(0755, HOMEBREW_HOME)
+  File.chmod(0755, HOMEBREW_CACHE)
+end
+
+# revert from HOMEBREW_USER to a "normal" use
+def cmd_unmigrate(username)
+  switch_owners(username, 'admin', 'admin')
+  File.chown(0, nil, HOMEBREW_HOME)
+  File.chmod(0775, HOMEBREW_HOME)
+  File.chown(0, nil, HOMEBREW_CACHE)
+  File.chmod(0775, HOMEBREW_CACHE)
+end
+
 cmd_args = ARGV[1, ARGV.length - 1]
 
 case ARGV[0]
@@ -315,6 +383,9 @@ when '_do'
 when 'install'
   cmd_install
 
+when 'switch'
+  cmd_switch
+
 when 'doctor'
   exit cmd_doctor
 
@@ -327,18 +398,31 @@ when 'deluser'
 when 'mkdirs'
   cmd_mkdirs
 
+when 'mklogdir'
+  cmd_mklogdir
+
 when 'clone'
   cmd_clone
+
+when 'migrate'
+  cmd_migrate
+
+when 'unmigrate'
+  cmd_unmigrate(*cmd_args)
 
 else
   puts <<-EOT
 usage: brewdo brew COMMAND [ARGS [ARGS]...]
        brewdo do COMMAND [ARGS [ARGS]...]
        sudo brewdo install
+       sudo brewdo switch
        brewdo doctor
        sudo brewdo adduser|deluser
        sudo brewdo mkdirs
+       sudo brewdo mklogdir
        brewdo clone
+       sudo brewdo migrate
+       sudo brewdo unmigrate USERNAME
 EOT
 
 end
