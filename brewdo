@@ -344,7 +344,6 @@ def switch_owners(new_user, new_home_group, new_cache_group)
   end
 
   Find.find(HOMEBREW_CACHE) do |pathname|
-    next if pathname == HOMEBREW_CACHE # skip top-level directory
     uid, gid = file_owner(pathname)
     if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
       File.chown(new_uid, new_cache_gid, pathname)
