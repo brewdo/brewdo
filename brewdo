@@ -56,7 +56,7 @@ end
 def is_home_owned_writable_by_owner?
   is_owned_writable_by_owner?(HOMEBREW_HOME)
 end
-  
+
 # check that the Homebrew log directory is owned and writable by the
 # Homebrew owner
 def is_log_owned_writable_by_owner?
@@ -167,14 +167,14 @@ def cmd_deluser
 
   dscl('-delete', group_path)
   dscl('-delete', user_path)
-end 
+end
 
 # does this directory exist?
 def dir_exists?(dirname)
   File.exists?(dirname) and File.directory?(dirname)
 end
 
-# create Homebrew home 
+# create Homebrew home
 def create_homebrew_home
   require_root
 
@@ -232,7 +232,7 @@ end
 # run an arbitrary command inside the brewdo sandbox
 def cmd_do(*args)
   brewdo_bin = File.expand_path($0)
-  
+
   Dir.chdir('/')
   system(
     ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER,
@@ -326,7 +326,7 @@ end
 
 # switch ownership/groups recursively on HOMEBREW_HOME, HOMEBREW_CACHE
 def switch_owners(new_user, new_home_group, new_cache_group)
-  home_uid, home_gid = file_owner(HOMEBREW_HOME + '/.git') 
+  home_uid, home_gid = file_owner(HOMEBREW_HOME + '/.git')
   cache_uid, cache_gid = file_owner(HOMEBREW_CACHE + '/Formula')
   new_uid = Etc.getpwnam(new_user).uid
   new_home_gid = Etc.getgrnam(new_home_group).gid
