@@ -229,6 +229,40 @@ def cmd_brew(*args)
   end
 end
 
+# run a brew-cask command
+def cmd_cask(*args)
+  brew_bin = HOMEBREW_HOME + '/bin/brew'
+
+  if args.length == 0
+    args = ['help']
+  end
+
+  # some Homebrew commands can be called directly
+  if [
+    'alfred',
+    'audit',
+    'cat',
+    'cleanup',
+    'create',
+    'doctor',
+    'edit',
+    'fetch',
+    'home',
+    'info',
+    'install',
+    'list',
+    'search',
+    'uninstall',
+    'update',
+    'zap',
+  ].member?(args[0]) or (args[0] == 'doctor' and args[1] == '--list-checks')
+    system([brew_bin, 'brew'], 'cask', *args)
+    return $?.to_i >> 8
+  else
+    return cmd_do(brew_bin, 'cask', *args)
+  end
+end
+
 # run an arbitrary command inside the brewdo sandbox
 def cmd_do(*args)
   brewdo_bin = File.expand_path($0)
@@ -373,6 +407,9 @@ case ARGV[0]
 
 when 'brew'
   exit cmd_brew(*cmd_args)
+
+when 'cask'
+  exit cmd_cask(*cmd_args)
 
 when 'do'
   exit cmd_do(*cmd_args)
