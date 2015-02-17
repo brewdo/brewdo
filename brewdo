@@ -56,7 +56,7 @@ end
 def is_home_owned_writable_by_owner?
   is_owned_writable_by_owner?(HOMEBREW_HOME)
 end
-  
+
 # check that the Homebrew log directory is owned and writable by the
 # Homebrew owner
 def is_log_owned_writable_by_owner?
@@ -167,14 +167,14 @@ def cmd_deluser
 
   dscl('-delete', group_path)
   dscl('-delete', user_path)
-end 
+end
 
 # does this directory exist?
 def dir_exists?(dirname)
   File.exists?(dirname) and File.directory?(dirname)
 end
 
-# create Homebrew home 
+# create Homebrew home
 def create_homebrew_home
   require_root
 
@@ -229,10 +229,44 @@ def cmd_brew(*args)
   end
 end
 
+# run a brew-cask command
+def cmd_cask(*args)
+  brew_bin = HOMEBREW_HOME + '/bin/brew'
+
+  if args.length == 0
+    args = ['help']
+  end
+
+  # some Homebrew commands can be called directly
+  if [
+    'alfred',
+    'audit',
+    'cat',
+    'cleanup',
+    'create',
+    'doctor',
+    'edit',
+    'fetch',
+    'home',
+    'info',
+    'install',
+    'list',
+    'search',
+    'uninstall',
+    'update',
+    'zap',
+  ].member?(args[0]) or (args[0] == 'doctor' and args[1] == '--list-checks')
+    system([brew_bin, 'brew'], 'cask', *args)
+    return $?.to_i >> 8
+  else
+    return cmd_do(brew_bin, 'cask', *args)
+  end
+end
+
 # run an arbitrary command inside the brewdo sandbox
 def cmd_do(*args)
   brewdo_bin = File.expand_path($0)
-  
+
   Dir.chdir('/')
   system(
     ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER,
@@ -326,15 +360,11 @@ end
 
 # switch ownership/groups recursively on HOMEBREW_HOME, HOMEBREW_CACHE
 def switch_owners(new_user, new_home_group, new_cache_group)
-  home_uid, home_gid = file_owner(HOMEBREW_HOME + '/.git') 
+  home_uid, home_gid = file_owner(HOMEBREW_HOME + '/.git')
   cache_uid, cache_gid = file_owner(HOMEBREW_CACHE + '/Formula')
   new_uid = Etc.getpwnam(new_user).uid
   new_home_gid = Etc.getgrnam(new_home_group).gid
   new_cache_gid = Etc.getgrnam(new_cache_group).gid
-
-  if home_uid == new_uid
-    raise AlreadySwitchedError.new('already switched')
-  end
 
   Find.find(HOMEBREW_HOME) do |pathname|
     uid, gid = file_owner(pathname)
@@ -344,7 +374,6 @@ def switch_owners(new_user, new_home_group, new_cache_group)
   end
 
   Find.find(HOMEBREW_CACHE) do |pathname|
-    next if pathname == HOMEBREW_CACHE # skip top-level directory
     uid, gid = file_owner(pathname)
     if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
       File.chown(new_uid, new_cache_gid, pathname)
@@ -374,6 +403,9 @@ case ARGV[0]
 
 when 'brew'
   exit cmd_brew(*cmd_args)
+
+when 'cask'
+  exit cmd_cask(*cmd_args)
 
 when 'do'
   exit cmd_do(*cmd_args)
@@ -414,6 +446,7 @@ when 'unmigrate'
 else
   puts <<-EOT
 usage: brewdo brew COMMAND [ARGS [ARGS]...]
+       brewdo cask COMMAND [ARGS [ARGS]...]
        brewdo do COMMAND [ARGS [ARGS]...]
        sudo brewdo install
        sudo brewdo switch
