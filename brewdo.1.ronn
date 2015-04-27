@@ -56,7 +56,9 @@ brewdo(1) supports the following primary commands:
 
 *   `do` <command> [<arguments>...]:
     Use sudo(1) to switch to the Homebrew user and run the supplied
-    command.  Intended for maintenance of the Homebrew home.
+    command.  Intended for maintenance of the Homebrew home.  If the
+    sandbox user cannot access the current working directory, brewdo(1)
+    will change to `/` first.
 
 *   `install`:
     Create the Homebrew user, log directory, and cache; then clone

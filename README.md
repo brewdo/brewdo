@@ -1,7 +1,6 @@
 brewdo
 ====
 
-
 brewdo is a wrapper for [Homebrew](http://brew.sh/) that sandboxes the
 installation process, giving you the following advantages:
 
@@ -31,7 +30,9 @@ sure your system is backed up before running `brewdo install` or
 
 brewdo has been tested on:
 
--   OS X 10.9 Mavericks (primary development platform)
+-   OS X 10.10 Yosemite (primary development platform)
+
+-   OS X 10.9 Mavericks
 
 -   OS X 10.8 Mountain Lion
 

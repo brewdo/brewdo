@@ -233,7 +233,6 @@ end
 def cmd_do(*args)
   brewdo_bin = File.expand_path($0)
   
-  Dir.chdir('/')
   system(
     ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER,
     brewdo_bin, '_do', *args
@@ -244,6 +243,12 @@ end
 # run an arbitrary command with environment etc.; intended to be run
 # inside the sandbox
 def cmd__do(*args)
+  begin
+    Dir.chdir(Dir.pwd)
+  rescue Errno::EACCES
+    Dir.chdir('/')
+  end
+
   temphome = `mktemp -dt brewdo`.chop
   at_exit do
     FileUtils.remove_entry_secure(temphome)
