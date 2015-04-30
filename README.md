@@ -34,15 +34,23 @@ brewdo has been tested on:
 
 -   OS X 10.9 Mavericks
 
--   OS X 10.8 Mountain Lion
+In the past, brewdo was also tested on OS X 10.8 Mountain Lion, and
+should still work there.
 
 Installation
 ----
 
-Run `make install` to install brewdo and its manual page.  Or run
-it directly out of your Git clone; your choice.  Directions for
-either installing a brand-new Homebrew installation or switching an
-existing one to brewdo are in the manual page.
+If you have a new system with no `/usr/local` at all, you can install
+brewdo by first running `sudo ./brewdo install` in your Git clone; this
+will set up the sandbox user and Homebrew into a new `/usr/local`.
+When this is done, you can optionally run `./brewdo do make install` to
+install the `brewdo` program and its man page into `/usr/local` so you
+can use it across your whole system.
+
+You can also run `brewdo` directly out of your Git clone; the program
+is an entirely self-contained script. `brewdo.1.ronn` is the
+[Ronn](http://rtomayko.github.io/ronn/)-formatted man page for `brewdo`
+that you can read directly to get information on using the program.
 
 How it works
 ----

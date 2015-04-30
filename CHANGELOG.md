@@ -18,3 +18,12 @@ Changelog
 
 -   Minor documentation updates.
 
+2.0.1
+----
+
+-   Updated documentation and Vagrant setups for Yosemite and Mavericks
+    support.
+
+-   Updated documentation with a working installation routine (sorry
+    about that!)  Fixes issue #10.
+
