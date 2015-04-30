@@ -34,7 +34,8 @@ brewdo has been tested on:
 
 -   OS X 10.9 Mavericks
 
--   OS X 10.8 Mountain Lion
+In the past, brewdo was also tested on OS X 10.8 Mountain Lion, and
+should still work there.
 
 Installation
 ----
