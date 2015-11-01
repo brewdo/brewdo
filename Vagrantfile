@@ -18,7 +18,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.define "yosemite", primary:true do |yosemite|
-    yosemite.vm.box = "osx-10.10.4"
+    yosemite.vm.box = "osx-10.10.5"
   end
 
   config.vm.define "mavericks" do |mavericks|
