@@ -322,7 +322,7 @@ end
 
 # determine ownership of a given file
 def file_owner(pathname)
-  stat = File.stat(pathname)
+  stat = File.lstat(pathname)
   return stat.uid, stat.gid
 end
 
@@ -344,14 +344,14 @@ def switch_owners(new_user, new_home_group, new_cache_group)
   Find.find(HOMEBREW_HOME) do |pathname|
     uid, gid = file_owner(pathname)
     if pathname == HOMEBREW_HOME or (uid == home_uid and gid == home_gid)
-      File.chown(new_uid, new_home_gid, pathname)
+      File.lchown(new_uid, new_home_gid, pathname)
     end
   end
 
   Find.find(HOMEBREW_CACHE) do |pathname|
     uid, gid = file_owner(pathname)
     if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
-      File.chown(new_uid, new_cache_gid, pathname)
+      File.lchown(new_uid, new_cache_gid, pathname)
     end
   end
 end
