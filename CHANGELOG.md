@@ -27,3 +27,12 @@ Changelog
 -   Updated documentation with a working installation routine (sorry
     about that!)  Fixes issue #10.
 
+2.0.2
+----
+
+-   Updated documentation and Vagrant setups for El Capitan.
+
+-   Fixed switch behavior so that it no longer follows symlinks.
+    This both stops it from erroring on dangling symlinks and keeps
+    it from following symlinks out of the Homebrew home.
+

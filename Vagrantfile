@@ -13,8 +13,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # To build your own OS X Vagrant box, see:
   # https://github.com/timsutton/osx-vm-templates
+  config.vm.define "elcapitan", primary:true do |elcapitan|
+    elcapitan.vm.box = "osx-10.11.1"
+  end
+
   config.vm.define "yosemite", primary:true do |yosemite|
-    yosemite.vm.box = "osx-10.10.3"
+    yosemite.vm.box = "osx-10.10.5"
   end
 
   config.vm.define "mavericks" do |mavericks|

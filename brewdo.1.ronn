@@ -132,10 +132,10 @@ intended for maintenance, step-by-step installation, and uninstallation:
 
 ## COMPATIBILITY
 
-brewdo(1) is tested on OS X 10.10 Yosemite and OS X 10.9 Mavericks.
+brewdo(1) is tested on OS X 10.11 El Capitan.
 
-It was once tested on OS X 10.8 Mountain Lion and is expected to still
-work there.
+It was once tested on versions as far back as OS X 10.8 Mountain
+Lion and is expected to still work there.
 
 ## AUTHOR
 
