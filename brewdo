@@ -213,6 +213,7 @@ def cmd_brew(*args)
     '--help',
     '--prefix',
     '--repository',
+    'cask',
     'config',
     'help',
     'home',
