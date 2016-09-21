@@ -36,3 +36,9 @@ Changelog
     This both stops it from erroring on dangling symlinks and keeps
     it from following symlinks out of the Homebrew home.
 
+2.0.3
+----
+
+-   Fixed mktemp call to use an absolute path to avoid using non-macOS
+    versions of mktemp that may be on a user's PATH.  Fixes issue #16.
+
