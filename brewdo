@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 #
-# Copyright (c) 2014 Matt Behrens.
+# Copyright (c) 2014, 2015, 2016 Matt Behrens.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -249,7 +249,7 @@ def cmd__do(*args)
     Dir.chdir('/')
   end
 
-  temphome = `mktemp -dt brewdo`.chop
+  temphome = `/usr/bin/mktemp -dt brewdo`.chop
   at_exit do
     FileUtils.remove_entry_secure(temphome)
   end
