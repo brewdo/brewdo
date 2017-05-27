@@ -1,3 +1,7 @@
+**This project is unmaintained and unsupported, and likely has issues.**
+
+If someone is interested in taking it over, please let me know!
+
 brewdo
 ====
 
