@@ -56,7 +56,7 @@ end
 def is_home_owned_writable_by_owner?
   is_owned_writable_by_owner?(HOMEBREW_HOME)
 end
-  
+
 # check that the Homebrew log directory is owned and writable by the
 # Homebrew owner
 def is_log_owned_writable_by_owner?
@@ -167,14 +167,14 @@ def cmd_deluser
 
   dscl('-delete', group_path)
   dscl('-delete', user_path)
-end 
+end
 
 # does this directory exist?
 def dir_exists?(dirname)
   File.exists?(dirname) and File.directory?(dirname)
 end
 
-# create Homebrew home 
+# create Homebrew home
 def create_homebrew_home
   require_root
 
@@ -232,9 +232,9 @@ end
 # run an arbitrary command inside the brewdo sandbox
 def cmd_do(*args)
   brewdo_bin = File.expand_path($0)
-  
+
   system(
-    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER,
+    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-H',
     brewdo_bin, '_do', *args
   )
   return $?.to_i >> 8
@@ -331,14 +331,17 @@ end
 
 # switch ownership/groups recursively on HOMEBREW_HOME, HOMEBREW_CACHE
 def switch_owners(new_user, new_home_group, new_cache_group)
-  home_uid, home_gid = file_owner(HOMEBREW_HOME + '/.git') 
-  cache_uid, cache_gid = file_owner(HOMEBREW_CACHE + '/Formula')
+  home_uid, home_gid = file_owner(HOMEBREW_HOME + '/Cellar')
   new_uid = Etc.getpwnam(new_user).uid
-  new_home_gid = Etc.getgrnam(new_home_group).gid
-  new_cache_gid = Etc.getgrnam(new_cache_group).gid
+
+  if Dir.exist?(HOMEBREW_CACHE)
+    cache_uid, cache_gid = file_owner(HOMEBREW_CACHE + '/Formula')
+    new_home_gid = Etc.getgrnam(new_home_group).gid
+    new_cache_gid = Etc.getgrnam(new_cache_group).gid
+  end
 
   if home_uid == new_uid
-    raise AlreadySwitchedError.new('already switched')
+    raise AlreadySwitchedError.new('already switched owners')
   end
 
   Find.find(HOMEBREW_HOME) do |pathname|
@@ -348,10 +351,12 @@ def switch_owners(new_user, new_home_group, new_cache_group)
     end
   end
 
-  Find.find(HOMEBREW_CACHE) do |pathname|
-    uid, gid = file_owner(pathname)
-    if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
-      File.lchown(new_uid, new_cache_gid, pathname)
+  if Dir.exist?(HOMEBREW_CACHE)
+    Find.find(HOMEBREW_CACHE) do |pathname|
+      uid, gid = file_owner(pathname)
+      if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
+        File.lchown(new_uid, new_cache_gid, pathname)
+      end
     end
   end
 end
@@ -360,7 +365,9 @@ end
 def cmd_migrate
   switch_owners(HOMEBREW_USER, 'wheel', 'admin')
   File.chmod(0755, HOMEBREW_HOME)
-  File.chmod(0755, HOMEBREW_CACHE)
+  if Dir.exist?(HOMEBREW_CACHE)
+    File.chmod(0755, HOMEBREW_CACHE)
+  end
 end
 
 # revert from HOMEBREW_USER to a "normal" use
