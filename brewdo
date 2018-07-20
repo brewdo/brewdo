@@ -30,6 +30,12 @@ require 'find'
 require 'fileutils'
 require 'etc'
 
+def prompt(default, *args)
+  print(*args)
+  result = STDIN.gets.strip
+  result.empty? ? default : result
+end
+
 # check the Homebrew owner account exists
 def is_owner_present?
   begin
@@ -126,7 +132,22 @@ end
 # add the Homebrew owner account, raising an error on failure
 def cmd_adduser
   require_root
-  raise OwnerExistsError.new('owner account exists') if is_owner_present?
+  if is_owner_present?
+    while TRUE
+      rep = prompt('A', 'Homebrew owner account exists. Abort (A), ignore (i), or recreate (r)? ')
+      case rep.downcase()
+      when 'a'
+        raise OwnerExistsError.new('owner account exists')
+      when 'i'
+        return
+      when 'r'
+        cmd_deluser
+      else
+        next
+      end
+      break
+    end
+  end
 
   uid = find_unused_uid
   raise NoFreeUidError.new('no free uid for owner account') if uid == nil
@@ -189,7 +210,9 @@ end
 def create_homebrew_log
   require_root
 
-  Dir.mkdir(HOMEBREW_LOGS)
+  if not Dir.exist?(HOMEBREW_LOGS)
+    Dir.mkdir(HOMEBREW_LOGS)
+  end
   uid = get_owner_uid
   File.chown(uid, nil, HOMEBREW_LOGS)
   File.chmod(0755, HOMEBREW_LOGS)
@@ -331,12 +354,13 @@ end
 
 # switch ownership/groups recursively on HOMEBREW_HOME, HOMEBREW_CACHE
 def switch_owners(new_user, new_home_group, new_cache_group)
-  home_uid, home_gid = file_owner(HOMEBREW_HOME + '/Cellar')
+  home_uid, home_gid = file_owner(HOMEBREW_HOME + '/Homebrew')
   new_uid = Etc.getpwnam(new_user).uid
+  new_home_gid = Etc.getgrnam(new_home_group).gid
 
-  if Dir.exist?(HOMEBREW_CACHE)
+  cache_exists = Dir.exist?(HOMEBREW_CACHE)
+  if cache_exists
     cache_uid, cache_gid = file_owner(HOMEBREW_CACHE + '/Formula')
-    new_home_gid = Etc.getgrnam(new_home_group).gid
     new_cache_gid = Etc.getgrnam(new_cache_group).gid
   end
 
@@ -351,7 +375,7 @@ def switch_owners(new_user, new_home_group, new_cache_group)
     end
   end
 
-  if Dir.exist?(HOMEBREW_CACHE)
+  if cache_exists
     Find.find(HOMEBREW_CACHE) do |pathname|
       uid, gid = file_owner(pathname)
       if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
