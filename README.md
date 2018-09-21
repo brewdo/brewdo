@@ -1,9 +1,5 @@
-**This project is unmaintained and unsupported, and likely has issues.**
-
-If someone is interested in taking it over, please let me know!
-
 brewdo
-====
+======
 
 brewdo is a wrapper for [Homebrew](http://brew.sh/) that sandboxes the
 installation process, giving you the following advantages:
@@ -19,7 +15,7 @@ installation process, giving you the following advantages:
 -   You can cleanly share Homebrew admin rights among multiple users
     of the same system
 
-brewdo uses sudo(1), but not to run commands as `root`; rather, to
+brewdo uses `sudo(1)`, but not to run commands as `root`; rather, to
 run Homebrew under a dedicated sandbox user account.
 
 brewdo grew out of the experiment in my blog post, [Sandboxing
@@ -34,13 +30,14 @@ sure your system is backed up before running `brewdo install` or
 
 brewdo has been tested on:
 
--   OS X 10.11 El Capitan (primary development platform)
+-   macOS 10.13 High Sierra (primary development platform)
+-   macOS 10.11 El Capitan
 
-In the past, brewdo was also tested as far back as OS X 10.8 Mountain
-Lion and I think it should still work there.
+In the past, brewdo was also tested as far back as macOS 10.8 Mountain
+Lion, and I think it should still work there.
 
 Installation
-----
+------------
 
 If you have a new system with no `/usr/local` at all, you can install
 brewdo by first running `sudo ./brewdo install` in your Git clone; this
@@ -55,7 +52,7 @@ is an entirely self-contained script. `brewdo.1.ronn` is the
 that you can read directly to get information on using the program.
 
 How it works
-----
+------------
 
 brewdo requires a sandbox user account (traditionally `_homebrew`).
 This user account is switched to using Sudo whenever you use brewdo
@@ -66,4 +63,3 @@ system-wide log directory (`/var/log/homebrew`, which was chosen
 because Console.app finds it transparently).
 brewdo also takes care of extra steps required by some formulae,
 such as creating (and cleaning up) a temporary home directory.
-
