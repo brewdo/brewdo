@@ -27,6 +27,7 @@ HOMEBREW_HOME = '/usr/local'
 HOMEBREW_LOGS = '/var/log/homebrew'
 HOMEBREW_CACHE = '/Library/Caches/Homebrew'
 
+require 'colorize'
 require 'find'
 require 'fileutils'
 require 'etc'
@@ -200,7 +201,7 @@ end
 def create_homebrew_home
   require_root
 
-  # /usr/local generally exists, so it should not be a failure if it
+  # `/usr/local` generally exists, so it should not be a failure if it
   # does
   Dir.mkdir(HOMEBREW_HOME) unless dir_exists?(HOMEBREW_HOME)
   uid = get_owner_uid
@@ -313,6 +314,13 @@ def cmd_install
   cmd_adduser
   cmd_mkdirs
   cmd_clone
+
+  puts <<-EOT
+NOTE: If you are a Homebrew Cask user, the `_homebrew` user created by brewdo
+needs to have a password in order for casks to perform installation actions
+as the superuser. You can use the `chpass` utility to set a password.
+  EOT
+  .bold
 end
 
 # switch from an existing Homebrew installation to brewdo
@@ -460,8 +468,7 @@ usage: brewdo brew COMMAND [ARGS [ARGS]...]
        brewdo clone
        sudo brewdo migrate
        sudo brewdo unmigrate USERNAME
-EOT
-
+  EOT
 end
 
 # vim: tabstop=8 expandtab shiftwidth=2 softtabstop=2
