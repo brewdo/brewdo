@@ -41,3 +41,15 @@ Changelog
 
 -   Fixed mktemp call to use an absolute path to avoid using non-macOS
     versions of mktemp that may be on a user's PATH.  Fixes issue #16.
+
+2.1.0
+-----
+
+-   Restored compatibility with latest version of Homebrew.
+
+-   Improved handling of pre-existing `_homebrew` user and brew cache during
+    install.
+
+-   Added install notice for Homebrew Cask users.
+
+-   Tested on macOS High Sierra.
