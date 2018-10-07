@@ -364,32 +364,26 @@ end
 # switch ownership/groups recursively on HOMEBREW_HOME, HOMEBREW_CACHE
 def switch_owners(new_user, new_home_group, new_cache_group)
   home_uid, home_gid = file_owner(HOMEBREW_HOME + '/Homebrew')
-  new_uid = Etc.getpwnam(new_user).uid
+  cache_uid, cache_gid = file_owner(HOMEBREW_CACHE)
+  new_home_uid = Etc.getpwnam(new_user).uid
   new_home_gid = Etc.getgrnam(new_home_group).gid
+  new_cache_gid = Etc.getgrnam(new_cache_group).gid
 
-  cache_exists = Dir.exist?(HOMEBREW_CACHE)
-  if cache_exists
-    cache_uid, cache_gid = file_owner(HOMEBREW_CACHE + '/Formula')
-    new_cache_gid = Etc.getgrnam(new_cache_group).gid
-  end
-
-  if home_uid == new_uid
+  if home_uid == new_home_uid
     raise AlreadySwitchedError.new('already switched owners')
   end
 
   Find.find(HOMEBREW_HOME) do |pathname|
     uid, gid = file_owner(pathname)
     if pathname == HOMEBREW_HOME or (uid == home_uid and gid == home_gid)
-      File.lchown(new_uid, new_home_gid, pathname)
+      File.lchown(new_home_uid, new_home_gid, pathname)
     end
   end
 
-  if cache_exists
-    Find.find(HOMEBREW_CACHE) do |pathname|
-      uid, gid = file_owner(pathname)
-      if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
-        File.lchown(new_uid, new_cache_gid, pathname)
-      end
+  Find.find(HOMEBREW_CACHE) do |pathname|
+    uid, gid = file_owner(pathname)
+    if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
+      File.lchown(new_home_uid, new_cache_gid, pathname)
     end
   end
 end
@@ -398,9 +392,7 @@ end
 def cmd_migrate
   switch_owners(HOMEBREW_USER, 'wheel', 'admin')
   File.chmod(0755, HOMEBREW_HOME)
-  if Dir.exist?(HOMEBREW_CACHE)
-    File.chmod(0755, HOMEBREW_CACHE)
-  end
+  File.chmod(0755, HOMEBREW_CACHE)
 end
 
 # revert from HOMEBREW_USER to a "normal" use
@@ -462,7 +454,7 @@ usage: brewdo brew COMMAND [ARGS [ARGS]...]
        sudo brewdo install
        sudo brewdo switch
        brewdo doctor
-       sudo brewdo adduser|deluser
+       sudo brewdo adduser | deluser
        sudo brewdo mkdirs
        sudo brewdo mklogdir
        brewdo clone
