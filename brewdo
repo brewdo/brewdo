@@ -212,12 +212,20 @@ end
 def create_homebrew_log
   require_root
 
-  if not Dir.exist?(HOMEBREW_LOGS)
-    Dir.mkdir(HOMEBREW_LOGS)
-  end
+  Dir.mkdir(HOMEBREW_LOGS) unless Dir.exist?(HOMEBREW_LOGS)
   uid = get_owner_uid
   File.chown(uid, nil, HOMEBREW_LOGS)
   File.chmod(0755, HOMEBREW_LOGS)
+end
+
+# create Homebrew cache directory
+def create_homebrew_cache
+  require_root
+
+  Dir.mkdir(HOMEBREW_CACHE) unless Dir.exist?(HOMEBREW_CACHE)
+  uid = get_owner_uid
+  File.chown(uid, nil, HOMEBREW_CACHE)
+  File.chmod(0755, HOMEBREW_CACHE)
 end
 
 class GitCloneError < StandardError
@@ -274,12 +282,13 @@ def cmd__do(*args)
     Dir.chdir('/')
   end
 
-  temphome = `/usr/bin/mktemp -dt brewdo`.chop
+  temp_home = `/usr/bin/mktemp -dt brewdo`.chop
   at_exit do
-    FileUtils.remove_entry_secure(temphome)
+    FileUtils.remove_entry_secure(temp_home)
   end
 
-  ENV['HOME'] = temphome
+  ENV['HOME'] = temp_home
+  ENV['HOMEBREW_CACHE'] = HOMEBREW_CACHE
   ENV['HOMEBREW_LOGS'] = HOMEBREW_LOGS
   system(*args)
   return $?.to_i >> 8
@@ -290,6 +299,7 @@ def cmd_mkdirs
   require_root
 
   create_homebrew_log
+  create_homebrew_cache
   create_homebrew_home
 end
 
