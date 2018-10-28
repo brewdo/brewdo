@@ -135,7 +135,7 @@ end
 def cmd_adduser
   require_root
   if is_owner_present?
-    while TRUE
+    while true
       rep = prompt('A', 'Homebrew owner account exists. Abort (A), ignore (i), or recreate (r)? ')
       case rep.downcase()
       when 'a'
