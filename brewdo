@@ -383,17 +383,27 @@ def switch_owners(new_user, new_home_group, new_cache_group)
     raise AlreadySwitchedError.new('already switched owners')
   end
 
-  Find.find(HOMEBREW_HOME) do |pathname|
-    uid, gid = file_owner(pathname)
-    if pathname == HOMEBREW_HOME or (uid == home_uid and gid == home_gid)
-      File.lchown(new_home_uid, new_home_gid, pathname)
-    end
-  end
+  homebrew_dirs = [
+    'Cellar',
+    'Caskroom',
+    'Homebrew',
+    'Frameworks',
+    'bin',
+    'etc',
+    'include',
+    'lib',
+    'libexec',
+    'opt',
+    'sbin',
+    'share',
+    'var',
+  ].map { |dir| HOMEBREW_HOME + '/' + dir }
+  homebrew_dirs += Dir.glob(HOMEBREW_HOME + '/man*')
 
-  Find.find(HOMEBREW_CACHE) do |pathname|
+  Find.find(*homebrew_dirs, HOMEBREW_CACHE) do |pathname|
     uid, gid = file_owner(pathname)
-    if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
-      File.lchown(new_home_uid, new_cache_gid, pathname)
+    if (uid == home_uid and gid == home_gid) or pathname == HOMEBREW_CACHE
+      File.lchown(new_home_uid, new_home_gid, pathname)
     end
   end
 end
@@ -401,15 +411,15 @@ end
 # migrate from an existing user to HOMEBREW_USER
 def cmd_migrate
   switch_owners(HOMEBREW_USER, 'wheel', 'admin')
-  File.chmod(0755, HOMEBREW_HOME)
+  File.chmod(0755, HOMEBREW_HOME) rescue nil
   File.chmod(0755, HOMEBREW_CACHE)
 end
 
 # revert from HOMEBREW_USER to a "normal" use
 def cmd_unmigrate(username)
   switch_owners(username, 'admin', 'admin')
-  File.chown(0, nil, HOMEBREW_HOME)
-  File.chmod(0775, HOMEBREW_HOME)
+  File.chown(0, nil, HOMEBREW_HOME) rescue nil
+  File.chmod(0775, HOMEBREW_HOME) rescue nil
   File.chown(0, nil, HOMEBREW_CACHE)
   File.chmod(0775, HOMEBREW_CACHE)
 end
