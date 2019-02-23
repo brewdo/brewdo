@@ -167,7 +167,7 @@ def cmd_adduser
 
   dscl('-create', user_path)
   [
-    ['HomeDirectory', '/var/empty'],
+    ['NFSHomeDirectory', HOMEBREW_HOME + '/brewdo'],
     ['Password', '*'],
     ['PrimaryGroupID', uid.to_s],
     ['RealName', 'Homebrew Owner'],
