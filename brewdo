@@ -326,9 +326,9 @@ def cmd_install
   cmd_clone
 
   puts <<-EOT
-NOTE: If you are a Homebrew Cask user, the `_homebrew` user created by brewdo
+NOTE: if you are a Homebrew Cask user, the `_homebrew` user created by brewdo
 needs to have a password in order for casks to perform installation actions
-as the superuser. You can use the `chpass` utility to set a password.
+as the superuser. Run `passwd _homebrew` as root to set a password.
   EOT
   .bold
 end
