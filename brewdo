@@ -27,6 +27,7 @@ HOMEBREW_HOME = '/usr/local'
 HOMEBREW_LOGS = '/var/log/homebrew'
 HOMEBREW_CACHE = '/Library/Caches/Homebrew'
 
+require 'colorize'
 require 'find'
 require 'fileutils'
 require 'etc'
@@ -134,7 +135,7 @@ end
 def cmd_adduser
   require_root
   if is_owner_present?
-    while TRUE
+    while true
       rep = prompt('A', 'Homebrew owner account exists. Abort (A), ignore (i), or recreate (r)? ')
       case rep.downcase()
       when 'a'
@@ -166,7 +167,7 @@ def cmd_adduser
 
   dscl('-create', user_path)
   [
-    ['HomeDirectory', '/var/empty'],
+    ['NFSHomeDirectory', HOMEBREW_HOME + '/brewdo'],
     ['Password', '*'],
     ['PrimaryGroupID', uid.to_s],
     ['RealName', 'Homebrew Owner'],
@@ -200,7 +201,7 @@ end
 def create_homebrew_home
   require_root
 
-  # /usr/local generally exists, so it should not be a failure if it
+  # `/usr/local` generally exists, so it should not be a failure if it
   # does
   Dir.mkdir(HOMEBREW_HOME) unless dir_exists?(HOMEBREW_HOME)
   uid = get_owner_uid
@@ -211,12 +212,20 @@ end
 def create_homebrew_log
   require_root
 
-  if not Dir.exist?(HOMEBREW_LOGS)
-    Dir.mkdir(HOMEBREW_LOGS)
-  end
+  Dir.mkdir(HOMEBREW_LOGS) unless Dir.exist?(HOMEBREW_LOGS)
   uid = get_owner_uid
   File.chown(uid, nil, HOMEBREW_LOGS)
   File.chmod(0755, HOMEBREW_LOGS)
+end
+
+# create Homebrew cache directory
+def create_homebrew_cache
+  require_root
+
+  Dir.mkdir(HOMEBREW_CACHE) unless Dir.exist?(HOMEBREW_CACHE)
+  uid = get_owner_uid
+  File.chown(uid, nil, HOMEBREW_CACHE)
+  File.chmod(0755, HOMEBREW_CACHE)
 end
 
 class GitCloneError < StandardError
@@ -273,12 +282,13 @@ def cmd__do(*args)
     Dir.chdir('/')
   end
 
-  temphome = `/usr/bin/mktemp -dt brewdo`.chop
+  temp_home = `/usr/bin/mktemp -dt brewdo`.chop
   at_exit do
-    FileUtils.remove_entry_secure(temphome)
+    FileUtils.remove_entry_secure(temp_home)
   end
 
-  ENV['HOME'] = temphome
+  ENV['HOME'] = temp_home
+  ENV['HOMEBREW_CACHE'] = HOMEBREW_CACHE
   ENV['HOMEBREW_LOGS'] = HOMEBREW_LOGS
   system(*args)
   return $?.to_i >> 8
@@ -289,6 +299,7 @@ def cmd_mkdirs
   require_root
 
   create_homebrew_log
+  create_homebrew_cache
   create_homebrew_home
 end
 
@@ -313,6 +324,13 @@ def cmd_install
   cmd_adduser
   cmd_mkdirs
   cmd_clone
+
+  puts <<-EOT
+NOTE: if you are a Homebrew Cask user, the `_homebrew` user created by brewdo
+needs to have a password in order for casks to perform installation actions
+as the superuser. Run `passwd _homebrew` as root to set a password.
+  EOT
+  .bold
 end
 
 # switch from an existing Homebrew installation to brewdo
@@ -356,32 +374,36 @@ end
 # switch ownership/groups recursively on HOMEBREW_HOME, HOMEBREW_CACHE
 def switch_owners(new_user, new_home_group, new_cache_group)
   home_uid, home_gid = file_owner(HOMEBREW_HOME + '/Homebrew')
-  new_uid = Etc.getpwnam(new_user).uid
+  cache_uid, cache_gid = file_owner(HOMEBREW_CACHE)
+  new_home_uid = Etc.getpwnam(new_user).uid
   new_home_gid = Etc.getgrnam(new_home_group).gid
+  new_cache_gid = Etc.getgrnam(new_cache_group).gid
 
-  cache_exists = Dir.exist?(HOMEBREW_CACHE)
-  if cache_exists
-    cache_uid, cache_gid = file_owner(HOMEBREW_CACHE + '/Formula')
-    new_cache_gid = Etc.getgrnam(new_cache_group).gid
-  end
-
-  if home_uid == new_uid
+  if home_uid == new_home_uid
     raise AlreadySwitchedError.new('already switched owners')
   end
 
-  Find.find(HOMEBREW_HOME) do |pathname|
-    uid, gid = file_owner(pathname)
-    if pathname == HOMEBREW_HOME or (uid == home_uid and gid == home_gid)
-      File.lchown(new_uid, new_home_gid, pathname)
-    end
-  end
+  homebrew_dirs = [
+    'Cellar',
+    'Caskroom',
+    'Homebrew',
+    'Frameworks',
+    'bin',
+    'etc',
+    'include',
+    'lib',
+    'libexec',
+    'opt',
+    'sbin',
+    'share',
+    'var',
+  ].map { |dir| HOMEBREW_HOME + '/' + dir }
+  homebrew_dirs += Dir.glob(HOMEBREW_HOME + '/man*')
 
-  if cache_exists
-    Find.find(HOMEBREW_CACHE) do |pathname|
-      uid, gid = file_owner(pathname)
-      if pathname == HOMEBREW_CACHE or (uid == cache_uid and gid == cache_gid)
-        File.lchown(new_uid, new_cache_gid, pathname)
-      end
+  Find.find(*homebrew_dirs, HOMEBREW_CACHE) do |pathname|
+    uid, gid = file_owner(pathname)
+    if (uid == home_uid and gid == home_gid) or pathname == HOMEBREW_CACHE
+      File.lchown(new_home_uid, new_home_gid, pathname)
     end
   end
 end
@@ -389,17 +411,15 @@ end
 # migrate from an existing user to HOMEBREW_USER
 def cmd_migrate
   switch_owners(HOMEBREW_USER, 'wheel', 'admin')
-  File.chmod(0755, HOMEBREW_HOME)
-  if Dir.exist?(HOMEBREW_CACHE)
-    File.chmod(0755, HOMEBREW_CACHE)
-  end
+  File.chmod(0755, HOMEBREW_HOME) rescue nil
+  File.chmod(0755, HOMEBREW_CACHE)
 end
 
 # revert from HOMEBREW_USER to a "normal" use
 def cmd_unmigrate(username)
   switch_owners(username, 'admin', 'admin')
-  File.chown(0, nil, HOMEBREW_HOME)
-  File.chmod(0775, HOMEBREW_HOME)
+  File.chown(0, nil, HOMEBREW_HOME) rescue nil
+  File.chmod(0775, HOMEBREW_HOME) rescue nil
   File.chown(0, nil, HOMEBREW_CACHE)
   File.chmod(0775, HOMEBREW_CACHE)
 end
@@ -454,14 +474,13 @@ usage: brewdo brew COMMAND [ARGS [ARGS]...]
        sudo brewdo install
        sudo brewdo switch
        brewdo doctor
-       sudo brewdo adduser|deluser
+       sudo brewdo adduser | deluser
        sudo brewdo mkdirs
        sudo brewdo mklogdir
        brewdo clone
        sudo brewdo migrate
        sudo brewdo unmigrate USERNAME
-EOT
-
+  EOT
 end
 
 # vim: tabstop=8 expandtab shiftwidth=2 softtabstop=2
