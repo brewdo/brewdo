@@ -50,6 +50,6 @@ Changelog
 -   Improved handling of pre-existing `_homebrew` user and brew cache during
     install.
 
--   Added install notice for Homebrew Cask users.
+-   Added basic support and install notice for Homebrew Cask users.
 
--   Tested on macOS High Sierra.
+-   Tested on macOS High Sierra and Mojave.
