@@ -266,6 +266,13 @@ end
 def cmd_do(*args)
   brewdo_bin = File.expand_path($0)
 
+  if not system(
+    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-H', 'cd', Dir.pwd,
+    :err => File::NULL
+  )
+    Dir.chdir('/')
+  end
+
   system(
     ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-H',
     brewdo_bin, '_do', *args
