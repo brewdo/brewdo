@@ -239,7 +239,7 @@ def cmd_brew(*args)
     args = ['help']
   end
 
-  # some Homebrew commands can be called directly
+  # some Homebrew commands can be called directly, as long as we're not running as root
   if !is_root? and ([
     '--cellar',
     '--env',
