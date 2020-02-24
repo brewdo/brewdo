@@ -431,6 +431,9 @@ def cmd_unmigrate(username)
   File.chmod(0775, HOMEBREW_CACHE)
 end
 
+# clear group write bit from umask
+File.umask(File.umask & ~0020)
+
 cmd_args = ARGV[1, ARGV.length - 1]
 
 case ARGV[0]
