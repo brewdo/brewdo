@@ -23,6 +23,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 HOMEBREW_USER = '_homebrew'
+HOMEBREW_GROUP = '_homebrew'
 HOMEBREW_HOME = '/usr/local'
 HOMEBREW_LOGS = '/var/log/homebrew'
 HOMEBREW_CACHE = '/Library/Caches/Homebrew'
@@ -128,7 +129,7 @@ end
 
 # calculate directory service record paths
 def record_paths
-  ['/Groups/' + HOMEBREW_USER, '/Users/' + HOMEBREW_USER]
+  ['/Groups/' + HOMEBREW_GROUP, '/Users/' + HOMEBREW_USER]
 end
 
 # add the Homebrew owner account, raising an error on failure
@@ -267,14 +268,14 @@ def cmd_do(*args)
   brewdo_bin = File.expand_path($0)
 
   if not system(
-    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-H', 'cd', Dir.pwd,
+    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-g', HOMEBREW_GROUP, '-H', 'cd', Dir.pwd,
     :err => File::NULL
   )
     Dir.chdir('/')
   end
 
   system(
-    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-H',
+    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-g', HOMEBREW_GROUP, '-H',
     brewdo_bin, '_do', *args
   )
   return $?.to_i >> 8
@@ -320,8 +321,7 @@ end
 # clone Homebrew into Homebrew home
 def cmd_clone
   raise GitCloneError.new('Homebrew clone failed') unless system(
-    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER,
-    '/usr/bin/git', 'clone', 'https://github.com/Homebrew/homebrew.git',
+    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-g', HOMEBREW_GROUP, '/usr/bin/git', 'clone', 'https://github.com/Homebrew/homebrew.git',
     HOMEBREW_HOME
   )
 end
@@ -417,7 +417,7 @@ end
 
 # migrate from an existing user to HOMEBREW_USER
 def cmd_migrate
-  switch_owners(HOMEBREW_USER, 'wheel', 'admin')
+  switch_owners(HOMEBREW_USER, HOMEBREW_GROUP, 'admin')
   File.chmod(0755, HOMEBREW_HOME) rescue nil
   File.chmod(0755, HOMEBREW_CACHE)
 end
