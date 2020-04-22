@@ -123,13 +123,13 @@ end
 # execute a dscl command, raising an error on failure
 def dscl(*args)
   unless system(['/usr/bin/dscl', 'dscl'], '/Local/Default', *args)
-    raise ArgumentError.new('dscl /Local/Default ' + args.join(' '))
+    raise ArgumentError.new("dscl /Local/Default #{args.join(' ')}")
   end
 end
 
 # calculate directory service record paths
 def record_paths
-  ['/Groups/' + HOMEBREW_GROUP, '/Users/' + HOMEBREW_USER]
+  ["/Groups/#{HOMEBREW_GROUP}", "/Users/#{HOMEBREW_USER}"]
 end
 
 # add the Homebrew owner account, raising an error on failure
@@ -168,7 +168,7 @@ def cmd_adduser
 
   dscl('-create', user_path)
   [
-    ['NFSHomeDirectory', HOMEBREW_HOME + '/brewdo'],
+    ['NFSHomeDirectory', File.join(HOMEBREW_HOME, '/brewdo')],
     ['Password', '*'],
     ['PrimaryGroupID', uid.to_s],
     ['RealName', 'Homebrew Owner'],
@@ -234,7 +234,7 @@ end
 
 # run a Homebrew command
 def cmd_brew(*args)
-  brew_bin = HOMEBREW_HOME + '/bin/brew'
+  brew_bin = File.join(HOMEBREW_HOME, '/bin/brew')
 
   if args.length == 0
     args = ['help']
@@ -363,17 +363,17 @@ def cmd_doctor
   err = 0
 
   unless is_owner_present?
-    puts 'Homebrew owner ' + HOMEBREW_USER + ' not present on system'
+    puts "Homebrew owner #{HOMEBREW_USER} not present on system"
     err = 1
   end
 
   unless is_home_owned_writable_by_owner?
-    puts HOMEBREW_HOME + ' not owned/writable by ' + HOMEBREW_USER
+    puts "#{HOMEBREW_HOME} not owned/writable by #{HOMEBREW_USER}"
     err = 1
   end
 
   unless is_log_owned_writable_by_owner?
-    puts HOMEBREW_LOGS + ' not owned/writable by ' + HOMEBREW_USER
+    puts "#{HOMEBREW_LOGS} not owned/writable by #{HOMEBREW_USER}"
     err = 1
   end
 
@@ -391,7 +391,7 @@ end
 
 # switch ownership/groups recursively on HOMEBREW_HOME, HOMEBREW_CACHE
 def switch_owners(new_user, new_home_group, new_cache_group)
-  home_uid, home_gid = file_owner(HOMEBREW_HOME + '/Homebrew')
+  home_uid, home_gid = file_owner(File.join(HOMEBREW_HOME, '/Homebrew'))
   cache_uid, cache_gid = file_owner(HOMEBREW_CACHE)
   new_home_uid = Etc.getpwnam(new_user).uid
   new_home_gid = Etc.getgrnam(new_home_group).gid
@@ -415,8 +415,8 @@ def switch_owners(new_user, new_home_group, new_cache_group)
     'sbin',
     'share',
     'var',
-  ].map { |dir| HOMEBREW_HOME + '/' + dir }
-  homebrew_dirs += Dir.glob(HOMEBREW_HOME + '/man*')
+  ].map { |dir| File.join(HOMEBREW_HOME, dir) }
+  homebrew_dirs += Dir.glob(File.join(HOMEBREW_HOME, '/man*'))
 
   Find.find(*homebrew_dirs, HOMEBREW_CACHE) do |pathname|
     uid, gid = file_owner(pathname)
