@@ -332,10 +332,21 @@ def cmd_install
   cmd_mkdirs
   cmd_clone
 
-  puts <<-EOT
-NOTE: if you are a Homebrew Cask user, the `_homebrew` user created by brewdo
-needs to have a password in order for casks to perform installation actions
-as the superuser. Run `passwd _homebrew` as root to set a password.
+  puts <<~EOT
+    NOTE: you may want to add these lines to your sudoers file for convenience.
+  EOT
+  .bold
+
+  puts <<~EOT
+    # users in group 'admin' can run brewdo as user '#{HOMEBREW_USER}' without a password.
+    %admin	ALL=(#{HOMEBREW_USER}:#{HOMEBREW_GROUP}) NOPASSWD: #{HOMEBREW_HOME}/bin/brewdo
+
+  EOT
+
+  puts <<~EOT
+    NOTE: if you are a Homebrew Cask user, the `_homebrew` user created by brewdo
+    needs to have a password in order for casks to perform installation actions
+    as the superuser. Run `passwd _homebrew` as root to set a password.
   EOT
   .bold
 end
@@ -478,18 +489,19 @@ when 'unmigrate'
   cmd_unmigrate(*cmd_args)
 
 else
-  puts <<-EOT
-usage: brewdo brew COMMAND [ARGS [ARGS]...]
-       brewdo do COMMAND [ARGS [ARGS]...]
-       sudo brewdo install
-       sudo brewdo switch
-       brewdo doctor
-       sudo brewdo adduser | deluser
-       sudo brewdo mkdirs
-       sudo brewdo mklogdir
-       brewdo clone
-       sudo brewdo migrate
-       sudo brewdo unmigrate USERNAME
+
+  puts <<~EOT
+    usage: brewdo brew COMMAND [ARGS [ARGS]...]
+           brewdo do COMMAND [ARGS [ARGS]...]
+           sudo brewdo install
+           sudo brewdo switch
+           brewdo doctor
+           sudo brewdo adduser | deluser
+           sudo brewdo mkdirs
+           sudo brewdo mklogdir
+           brewdo clone
+           sudo brewdo migrate
+           sudo brewdo unmigrate USERNAME
   EOT
 end
 
