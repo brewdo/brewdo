@@ -63,3 +63,10 @@ system-wide log directory (`/var/log/homebrew`, which was chosen
 because Console.app finds it transparently).
 brewdo also takes care of extra steps required by some formulae,
 such as creating (and cleaning up) a temporary home directory.
+
+Related projects
+----------------
+
+- James McMeeking has adapted the Homebrew sandboxing aspect of
+  this project for use via MDM [here](https://github.com/mcmeeking/brewdo).
+
