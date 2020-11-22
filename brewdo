@@ -162,6 +162,7 @@ def cmd_adduser
     ['Password', '*'],
     ['PrimaryGroupID', uid.to_s],
     ['RealName', 'Homebrew Owner'],
+    ['IsHidden', 1],
   ].each do |pair|
     dscl('-create', group_path, pair[0], pair[1])
   end
