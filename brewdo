@@ -293,7 +293,7 @@ def cmd__do(*args)
 
   temp_home = `/usr/bin/mktemp -dt brewdo`.chop
   at_exit do
-    FileUtils.remove_entry_secure(temp_home)
+    FileUtils.remove_entry_secure(temp_home, force = true)
   end
 
   ENV['HOME'] = temp_home
