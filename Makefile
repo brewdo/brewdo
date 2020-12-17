@@ -1,7 +1,7 @@
-PREFIX =	/usr/local
-BINDIR =	$(PREFIX)/bin
-MANDIR =	$(PREFIX)/share/man
-MAN1DIR =	$(MANDIR)/man1
+PREFIX =	/usr/local/
+BINDIR =	$(PREFIX)/bin/
+MANDIR =	$(PREFIX)/share/man/
+MAN1DIR =	$(MANDIR)/man1/
 
 INSTALL =	install -o root -g wheel
 RONN =		ronn
@@ -13,6 +13,6 @@ $(MANPAGE): $(MANPAGE).ronn
 	$(RONN) -r $<
 
 install: $(BIN) $(MANPAGE)
-	$(INSTALL) -d $(BINDIR) $(MAN1DIR)
 	$(INSTALL) $(BIN) $(BINDIR)
-	$(INSTALL) -m 0644 $(MANPAGE) $(MANDIR)/man1
+	mkdir -p $(MAN1DIR)
+	$(INSTALL) -m 0644 $(MANPAGE) $(MAN1DIR)
