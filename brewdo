@@ -207,7 +207,6 @@ def create_homebrew_home
   # does
   Dir.mkdir(HOMEBREW_HOME) unless dir_exists?(HOMEBREW_HOME)
   uid = get_owner_uid
-  File.chown(uid, nil, HOMEBREW_HOME)
 end
 
 # create Homebrew log directory
@@ -303,13 +302,13 @@ def cmd__do(*args)
   return $?.to_i >> 8
 end
 
-# make home and log directories
+# make home, log, and cache directories
 def cmd_mkdirs
   require_root
 
+  create_homebrew_home
   create_homebrew_log
   create_homebrew_cache
-  create_homebrew_home
 end
 
 # make log directory only
@@ -335,6 +334,7 @@ def cmd_install
 
   puts <<~EOT
     NOTE: you may want to add these lines to your sudoers file for convenience.
+
   EOT
   .bold
 
@@ -437,7 +437,6 @@ end
 # revert from HOMEBREW_USER to a "normal" use
 def cmd_unmigrate(username)
   switch_owners(username, 'admin', 'admin')
-  File.chown(0, nil, HOMEBREW_HOME) rescue nil
   File.chmod(0775, HOMEBREW_HOME) rescue nil
   File.chown(0, nil, HOMEBREW_CACHE)
   File.chmod(0775, HOMEBREW_CACHE)
