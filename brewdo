@@ -45,7 +45,7 @@ def prompt(default, *args)
   result.empty? ? default : result
 end
 
-# check the Homebrew owner account exists
+# Checks that Homebrew owner account exists.
 def is_owner_present?
   begin
     Etc.getpwnam(HOMEBREW_USER)
@@ -55,30 +55,28 @@ def is_owner_present?
   end
 end
 
-# get Homebrew owner uid
+# Gets Homebrew owner uid.
 def get_owner_uid
   Etc.getpwnam(HOMEBREW_USER).uid
 end
 
-# check that a directory is owned and writable by the Homebrew owner
+# Checks that given directory is owned and writable by Homebrew owner.
 def is_owned_writable_by_owner?(directory)
   stat = File.stat(directory)
   stat.uid == get_owner_uid and (stat.mode & 0700) == 0700
 end
 
-# check that the Homebrew home is owned and writable by the Homebrew
-# owner
+# Checks that Homebrew home is owned and writable by Homebrew owner.
 def is_home_owned_writable_by_owner?
   is_owned_writable_by_owner?(HOMEBREW_HOME)
 end
 
-# check that the Homebrew log directory is owned and writable by the
-# Homebrew owner
+# Checks that Homebrew log directory is owned and writable by Homebrew owner.
 def is_log_owned_writable_by_owner?
   is_owned_writable_by_owner?(HOMEBREW_LOGS)
 end
 
-# check that we are root
+# Checks that we are root.
 def is_root?
   Process.euid == 0
 end
@@ -86,12 +84,12 @@ end
 class RootRequiredError < StandardError
 end
 
-# require root
+# Requires that we are root.
 def require_root
   raise RootRequiredError.new('root required; try sudo') unless is_root?
 end
 
-# check to see if a uid is unused
+# Checks to see if given uid is unused.
 def is_uid_unused?(uid)
   begin
     Etc.getpwuid(uid)
@@ -101,7 +99,7 @@ def is_uid_unused?(uid)
   false
 end
 
-# check to see if a gid is unused
+# Checks to see if given gid is unused.
 def is_gid_unused?(gid)
   begin
     Etc.getgrgid(gid)
@@ -111,8 +109,7 @@ def is_gid_unused?(gid)
   false
 end
 
-# find an unused uid and matching gid suitable for the Homebrew owner,
-# or nil if no suitable uid can be found
+# Finds an unused uid and matching gid suitable for the Homebrew owner, or nil if no suitable uid can be found.
 def find_unused_uid
   500.downto(1) do |uid|
     return uid if is_uid_unused?(uid) and is_gid_unused?(uid)
@@ -126,19 +123,19 @@ end
 class NoFreeUidError < StandardError
 end
 
-# execute a dscl command, raising an error on failure
+# Executes a dscl command, raising an error on failure.
 def dscl(*args)
   unless system(['/usr/bin/dscl', 'dscl'], '/Local/Default', *args)
     raise ArgumentError.new("dscl /Local/Default #{args.join(' ')}")
   end
 end
 
-# calculate directory service record paths
+# Calculates directory service record paths.
 def record_paths
   ["/Groups/#{HOMEBREW_GROUP}", "/Users/#{HOMEBREW_USER}"]
 end
 
-# add the Homebrew owner account, raising an error on failure
+# Adds the Homebrew owner account, raising an error on failure.
 def cmd_adduser
   require_root
   if is_owner_present?
@@ -190,7 +187,7 @@ def cmd_adduser
   end
 end
 
-# delete homebrew owner account, raising an error on failure
+# Deletes the Homebrew owner account, raising an error on failure.
 def cmd_deluser
   require_root
 
@@ -200,22 +197,21 @@ def cmd_deluser
   dscl('-delete', user_path)
 end
 
-# does this directory exist?
+# Checks whether the given directory exist.
 def dir_exists?(dirname)
   File.exists?(dirname) and File.directory?(dirname)
 end
 
-# create Homebrew home
+# Creates the Homebrew home directory.
 def create_homebrew_home
   require_root
 
-  # `/usr/local` generally exists, so it should not be a failure if it
-  # does
+  # `/usr/local` generally exists, so it should not be a failure if it does.
   Dir.mkdir(HOMEBREW_HOME) unless dir_exists?(HOMEBREW_HOME)
   uid = get_owner_uid
 end
 
-# create Homebrew log directory
+# Creates Homebrew log directory.
 def create_homebrew_log
   require_root
 
@@ -224,7 +220,7 @@ def create_homebrew_log
   File.chown(uid, nil, HOMEBREW_LOGS)
 end
 
-# create Homebrew cache directory
+# Creates Homebrew cache directory.
 def create_homebrew_cache
   require_root
 
@@ -236,7 +232,7 @@ end
 class GitCloneError < StandardError
 end
 
-# run a Homebrew command
+# Runs a Homebrew command.
 def cmd_brew(*args)
   brew_bin = File.join(HOMEBREW_HOME, '/bin/brew')
 
@@ -244,7 +240,7 @@ def cmd_brew(*args)
     args = ['help']
   end
 
-  # some Homebrew commands can be called directly
+  # Some Homebrew commands can be called directly.
   if [
     '--cellar',
     '--env',
@@ -267,7 +263,7 @@ def cmd_brew(*args)
   end
 end
 
-# run an arbitrary command inside the brewdo sandbox
+# Runs an arbitrary command inside the brewdo sandbox.
 def cmd_do(*args)
   brewdo_bin = File.expand_path($0)
 
@@ -285,8 +281,7 @@ def cmd_do(*args)
   return $?.to_i >> 8
 end
 
-# run an arbitrary command with environment etc.; intended to be run
-# inside the sandbox
+# Runs an arbitrary command with environment; intended to be run inside the sandbox.
 def cmd__do(*args)
   begin
     Dir.chdir(Dir.pwd)
@@ -306,7 +301,7 @@ def cmd__do(*args)
   return $?.to_i >> 8
 end
 
-# make home, log, and cache directories
+# Creates home, log, and cache directories.
 def cmd_mkdirs
   require_root
 
@@ -315,14 +310,14 @@ def cmd_mkdirs
   create_homebrew_cache
 end
 
-# make log directory only
+# Creates log directory.
 def cmd_mklogdir
   require_root
 
   create_homebrew_log
 end
 
-# clone Homebrew into Homebrew home
+# Clones Homebrew into Homebrew home.
 def cmd_clone
   raise GitCloneError.new('Homebrew clone failed') unless system(
     ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-g', HOMEBREW_GROUP, '/usr/bin/git', 'clone', 'https://github.com/Homebrew/homebrew.git',
@@ -330,7 +325,7 @@ def cmd_clone
   )
 end
 
-# set up Homebrew with brewdo
+# Sets up Homebrew with brewdo.
 def cmd_install
   cmd_adduser
   cmd_mkdirs
@@ -356,14 +351,14 @@ def cmd_install
   .bold
 end
 
-# switch from an existing Homebrew installation to brewdo
+# Switches from an standard Homebrew installation to brewdo.
 def cmd_switch
   cmd_adduser
   cmd_mklogdir
   cmd_migrate
 end
 
-# check brewdo setup
+# Checks brewdo setup.
 def cmd_doctor
   err = 0
 
@@ -385,7 +380,7 @@ def cmd_doctor
   return err
 end
 
-# determine ownership of a given file
+# Returns ownership of a given file.
 def file_owner(pathname)
   stat = File.lstat(pathname)
   return stat.uid, stat.gid
@@ -394,7 +389,7 @@ end
 class AlreadySwitchedError < StandardError
 end
 
-# switch ownership/groups recursively on HOMEBREW_HOME, HOMEBREW_CACHE
+# Switches ownership/groups recursively on HOMEBREW_HOME, HOMEBREW_CACHE.
 def switch_owners(new_user, new_home_group, new_cache_group)
   homebrew_path = File.join(HOMEBREW_HOME, '/Homebrew')
   old_layout = File.directory?(homebrew_path)
@@ -428,19 +423,19 @@ def switch_owners(new_user, new_home_group, new_cache_group)
   end
 end
 
-# migrate from an existing user to HOMEBREW_USER
+# Migrates from an existing user to HOMEBREW_USER.
 def cmd_migrate
   switch_owners(HOMEBREW_USER, HOMEBREW_GROUP, 'admin')
   File.chown(0, nil, HOMEBREW_CACHE) if dir_exists?(HOMEBREW_HOME)
 end
 
-# revert from HOMEBREW_USER to a "normal" use
+# Reverts from HOMEBREW_USER to a "normal" user.
 def cmd_unmigrate(username = Etc.getlogin)
   switch_owners(username, 'admin', 'admin')
   File.chown(0, nil, HOMEBREW_CACHE) if dir_exists?(HOMEBREW_HOME)
 end
 
-# clear group write bit from umask
+# Clear group write bit from umask.
 File.umask(File.umask & ~0020)
 
 cmd_args = ARGV[1 ..]
