@@ -33,20 +33,20 @@ def shell(*args)
   out
 end
 
-HOMEBREW_USER = '_homebrew'
-HOMEBREW_GROUP = '_homebrew'
-HOMEBREW_HOME = shell('brew', '--prefix').rstrip
-HOMEBREW_LOGS = '/var/log/homebrew'
-HOMEBREW_CACHE = '/Library/Caches/Homebrew'
-
 def prompt(default, *args)
   print(*args)
   result = STDIN.gets.strip
   result.empty? ? default : result
 end
 
-# Checks that Homebrew owner account exists.
-def is_owner_present?
+HOMEBREW_USER = '_homebrew'
+HOMEBREW_GROUP = '_homebrew'
+HOMEBREW_HOME = shell('brew', '--prefix').rstrip
+HOMEBREW_LOGS = '/var/log/homebrew'
+HOMEBREW_CACHE = '/Library/Caches/Homebrew'
+
+# Checks that Homebrew user exists.
+def homebrew_user_exists?
   begin
     Etc.getpwnam(HOMEBREW_USER)
     true
@@ -55,25 +55,25 @@ def is_owner_present?
   end
 end
 
-# Gets Homebrew owner uid.
-def get_owner_uid
+# Gets the Homebrew user uid.
+def get_homebrew_user_uid
   Etc.getpwnam(HOMEBREW_USER).uid
 end
 
-# Checks that given directory is owned and writable by Homebrew owner.
-def is_owned_writable_by_owner?(directory)
+# Checks that given directory is owned and writable by Homebrew user.
+def is_owned_writable_by_homebrew_user?(directory)
   stat = File.stat(directory)
-  stat.uid == get_owner_uid and (stat.mode & 0700) == 0700
+  stat.uid == get_homebrew_user_uid and (stat.mode & 0700) == 0700
 end
 
-# Checks that Homebrew home is owned and writable by Homebrew owner.
-def is_home_owned_writable_by_owner?
-  is_owned_writable_by_owner?(HOMEBREW_HOME)
+# Checks that Homebrew home is owned and writable by Homebrew user.
+def is_home_owned_writable_by_hombrew_user?
+  is_owned_writable_by_homebrew_user?(HOMEBREW_HOME)
 end
 
-# Checks that Homebrew log directory is owned and writable by Homebrew owner.
-def is_log_owned_writable_by_owner?
-  is_owned_writable_by_owner?(HOMEBREW_LOGS)
+# Checks that Homebrew log directory is owned and writable by Homebrew user.
+def is_log_owned_writable_by_homebrew_user?
+  is_owned_writable_by_homebrew_user?(HOMEBREW_LOGS)
 end
 
 # Checks that we are root.
@@ -109,7 +109,7 @@ def is_gid_unused?(gid)
   false
 end
 
-# Finds an unused uid and matching gid suitable for the Homebrew owner, or nil if no suitable uid can be found.
+# Finds an unused uid and matching gid suitable for the Homebrew user, or nil if no suitable uid can be found.
 def find_unused_uid
   500.downto(1) do |uid|
     return uid if is_uid_unused?(uid) and is_gid_unused?(uid)
@@ -117,7 +117,7 @@ def find_unused_uid
   return nil
 end
 
-class OwnerExistsError < StandardError
+class HomebrewUserExistsError < StandardError
 end
 
 class NoFreeUidError < StandardError
@@ -135,15 +135,15 @@ def record_paths
   ["/Groups/#{HOMEBREW_GROUP}", "/Users/#{HOMEBREW_USER}"]
 end
 
-# Adds the Homebrew owner account, raising an error on failure.
+# Adds the Homebrew user, raising an error on failure.
 def cmd_adduser
   require_root
-  if is_owner_present?
+  if homebrew_user_exists?
     while true
-      rep = prompt('A', 'Homebrew owner account exists. Abort (A), ignore (i), or recreate (r)? ')
+      rep = prompt('A', 'Homebrew user already exists. Abort (A), ignore (i), or recreate (r)? ')
       case rep.downcase()
       when 'a'
-        raise OwnerExistsError.new('owner account exists')
+        raise HomebrewUserExistsError.new('Homebrew user account exists')
       when 'i'
         return
       when 'r'
@@ -156,7 +156,7 @@ def cmd_adduser
   end
 
   uid = find_unused_uid
-  raise NoFreeUidError.new('no free uid for owner account') if uid == nil
+  raise NoFreeUidError.new('no free uid for Homebrew user') if uid == nil
 
   group_path, user_path = record_paths
 
@@ -164,7 +164,7 @@ def cmd_adduser
   [
     ['Password', '*'],
     ['PrimaryGroupID', uid.to_s],
-    ['RealName', 'Homebrew Owner'],
+    ['RealName', 'Homebrew User'],
     ['IsHidden', 1],
   ].each do |pair|
     dscl('-create', group_path, pair[0], pair[1])
@@ -175,7 +175,7 @@ def cmd_adduser
     ['NFSHomeDirectory', File.join(HOMEBREW_HOME, '/brewdo')],
     ['Password', '*'],
     ['PrimaryGroupID', uid.to_s],
-    ['RealName', 'Homebrew Owner'],
+    ['RealName', 'Homebrew User'],
     ['UniqueID', uid.to_s],
     ['UserShell', '/usr/bin/false'],
   ].each do |pair|
@@ -187,7 +187,7 @@ def cmd_adduser
   end
 end
 
-# Deletes the Homebrew owner account, raising an error on failure.
+# Deletes the Homebrew user, raising an error on failure.
 def cmd_deluser
   require_root
 
@@ -208,7 +208,7 @@ def create_homebrew_home
 
   # `/usr/local` generally exists, so it should not be a failure if it does.
   Dir.mkdir(HOMEBREW_HOME) unless dir_exists?(HOMEBREW_HOME)
-  uid = get_owner_uid
+  uid = get_homebrew_user_uid
 end
 
 # Creates Homebrew log directory.
@@ -216,7 +216,7 @@ def create_homebrew_log
   require_root
 
   Dir.mkdir(HOMEBREW_LOGS) unless Dir.exist?(HOMEBREW_LOGS)
-  uid = get_owner_uid
+  uid = get_homebrew_user_uid
   File.chown(uid, nil, HOMEBREW_LOGS)
 end
 
@@ -225,7 +225,7 @@ def create_homebrew_cache
   require_root
 
   Dir.mkdir(HOMEBREW_CACHE) unless Dir.exist?(HOMEBREW_CACHE)
-  uid = get_owner_uid
+  uid = get_homebrew_user_uid
   File.chown(uid, nil, HOMEBREW_CACHE)
 end
 
@@ -362,17 +362,17 @@ end
 def cmd_doctor
   err = 0
 
-  unless is_owner_present?
-    puts "Homebrew owner #{HOMEBREW_USER} not present on system"
+  unless homebrew_user_exists?
+    puts "Homebrew user #{HOMEBREW_USER} does not exist"
     err = 1
   end
 
-  unless is_home_owned_writable_by_owner?
+  unless is_home_owned_writable_by_hombrew_user?
     puts "#{HOMEBREW_HOME} not owned/writable by #{HOMEBREW_USER}"
     err = 1
   end
 
-  unless is_log_owned_writable_by_owner?
+  unless is_log_owned_writable_by_homebrew_user?
     puts "#{HOMEBREW_LOGS} not owned/writable by #{HOMEBREW_USER}"
     err = 1
   end
@@ -407,8 +407,8 @@ def switch_owners(new_user, new_home_group, new_cache_group)
 
   if old_layout
     homebrew_dirs = [
-      'Cellar',
       'Caskroom',
+      'Cellar',
       'Homebrew',
     ].map { |dir| File.join(HOMEBREW_HOME, dir) }
   else
