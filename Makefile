@@ -1,15 +1,17 @@
-PREFIX ?=	/usr/local/
-BINDIR :=	$(PREFIX)/bin/
-MANDIR :=	$(PREFIX)/share/man/
-MAN1DIR :=	$(MANDIR)/man1/
+PREFIX  ?= /opt/homebrew/brewdo
+BINDIR  := $(PREFIX)/bin/
+MANDIR  := $(PREFIX)/share/man/
+MAN1DIR := $(MANDIR)/man1/
 
-INSTALL ?=	install -o root -g wheel
-MKDIR ?=	mkdir -p
-RONN ?=		ronn
-GEM ?=		gem
+INSTALL ?= install -o root -g wheel
+SYMLINK ?= ln -s
+MKDIR   ?= mkdir -p
+RONN    ?= ronn
+GEM     ?= gem
 
-BIN :=		brewdo
-MANPAGE :=	brewdo.1
+BIN     := brewdo
+MANPAGE := brewdo.1
+BREW    := brew
 
 $(MANPAGE): $(MANPAGE).ronn
 	$(RONN) -r $<
@@ -17,5 +19,6 @@ $(MANPAGE): $(MANPAGE).ronn
 install: $(BIN) $(MANPAGE)
 	$(GEM) install colorize
 	$(INSTALL) $(BIN) $(BINDIR)
+	$(SYMLINK) $(BIN) $(BREW)
 	$(MKDIR) $(MAN1DIR)
 	$(INSTALL) -m 0644 $(MANPAGE) $(MAN1DIR)
