@@ -172,7 +172,7 @@ def cmd_adduser
 
   dscl('-create', user_path)
   [
-    ['NFSHomeDirectory', File.join(HOMEBREW_HOME, '/brewdo')],
+    ['NFSHomeDirectory', File.join(HOMEBREW_HOME, 'brewdo')],
     ['Password', '*'],
     ['PrimaryGroupID', uid.to_s],
     ['RealName', 'Homebrew User'],
@@ -240,22 +240,31 @@ def cmd_brew(*args)
     args = ['help']
   end
 
-  # Some Homebrew commands can be called directly.
-  if [
+  # Some Homebrew commands can be called directly because they do not load
+  # formula, cask, or external-command definitions from taps.
+  direct_commands = [
     '--cellar',
-    '--env',
-    '--help',
     '--prefix',
     '--repository',
     'config',
+    'list',
+  ]
+
+  # These commands are safe to run directly only in their no-argument form.
+  # With a named formula, cask, or external command they may evaluate tap code,
+  # so route them through the `do` command to use the correct Homebrew 6 trust
+  # store.
+  direct_no_argument_commands = [
+    '--env',
+    '--help',
     'help',
     'home',
     'info',
-    'list',
-    'options',
-    'outdated',
-    'search',
-  ].member?(args[0]) or (args[0] == 'doctor' and args[1] == '--list-checks')
+  ]
+
+  if direct_commands.member?(args[0]) or
+     (args.length == 1 and direct_no_argument_commands.member?(args[0])) or
+     (args[0] == 'doctor' and args[1] == '--list-checks')
     system([brew_bin, 'brew'], *args)
     return $?.to_i >> 8
   else
@@ -268,20 +277,20 @@ def cmd_do(*args)
   brewdo_bin = File.expand_path($0)
 
   if not system(
-    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-g', HOMEBREW_GROUP, '-H', 'cd', Dir.pwd,
+    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-g', HOMEBREW_GROUP, 'cd', Dir.pwd,
     :err => File::NULL
   )
     Dir.chdir('/')
   end
 
   system(
-    ['/usr/bin/sudo', 'sudo'], '-u', HOMEBREW_USER, '-g', HOMEBREW_GROUP, '-H',
+    ['/usr/bin/sudo', 'sudo'], '-H', '-u', HOMEBREW_USER, '-g', HOMEBREW_GROUP,
     brewdo_bin, '_do', *args
   )
   return $?.to_i >> 8
 end
 
-# Runs an arbitrary command with environment; intended to be run inside the sandbox.
+# Runs an arbitrary command with the Homebrew environment.
 def cmd__do(*args)
   begin
     Dir.chdir(Dir.pwd)
@@ -289,12 +298,6 @@ def cmd__do(*args)
     Dir.chdir('/')
   end
 
-  temp_home = `/usr/bin/mktemp -dt brewdo`.chop
-  at_exit do
-    FileUtils.remove_entry_secure(temp_home, force = true)
-  end
-
-  ENV['HOME'] = temp_home
   ENV['HOMEBREW_CACHE'] = HOMEBREW_CACHE
   ENV['HOMEBREW_LOGS'] = HOMEBREW_LOGS
   system(*args)
